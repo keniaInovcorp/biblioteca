@@ -13,9 +13,14 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                         {{ __('Dashboard') }}
+                    </x-nav-link>
+
+                    <x-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
+                        {{ __('Editoras') }}
                     </x-nav-link>
                 </div>
+
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
@@ -142,7 +147,12 @@
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
+                {{ __('Editoras') }}
+            </x-responsive-nav-link>
         </div>
+
 
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200">

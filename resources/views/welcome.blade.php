@@ -110,6 +110,14 @@
                             </span>
                         </li>
                     </ul>
+
+                    @auth
+                        <a href="{{ route('publishers.create') }}" class="inline-block mt-4 px-5 py-2 text-white bg-[#f53003] rounded shadow hover:bg-[#d42a02] transition-colors">
+                            Publish
+                        </a>
+                    @endauth
+                 </div>
+
                     <ul class="flex gap-3 text-sm leading-normal">
                         <li>
                             <a href="https://cloud.laravel.com" target="_blank" class="inline-block hover:bg-black hover:border-black px-5 py-1.5 bg-[#1b1b18] rounded-sm border border-black text-white text-sm leading-normal">
