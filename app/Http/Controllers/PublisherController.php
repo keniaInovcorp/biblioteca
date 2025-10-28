@@ -42,7 +42,7 @@ class PublisherController extends Controller
 
         return redirect()
             ->route('publishers.index')
-            ->with('success', 'Editora criada com sucesso.');
+            ->with('success', 'Editora criada com sucesso!');
     }
 
     /**
