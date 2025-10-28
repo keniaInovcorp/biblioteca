@@ -54,20 +54,6 @@ export default {
             "night",
             "coffee",
             "winter",
-            //  style customizado:
-            {
-                biblioteca: {
-                    "primary": "#f53003",
-                    "secondary": "#d42a02", 
-                    "accent": "#37cdbe",
-                    "neutral": "#3d4451",
-                    "base-100": "#ffffff",
-                    "info": "#3abff8",
-                    "success": "#36d399",
-                    "warning": "#fbbd23",
-                    "error": "#f87272",
-                },
-            },
         ],
         darkTheme: "dark",
         base: true,
