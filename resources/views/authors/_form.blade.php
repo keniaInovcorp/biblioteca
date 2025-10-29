@@ -20,7 +20,13 @@
     </label>
 
     @if($isEdit && $author->photo_url)
-      <img src="{{ $author->photo_url }}" alt="photo" class="w-24 mb-2 rounded" />
+      <div class="mb-3">
+        <img src="{{ $author->photo_url }}" alt="photo" class="w-24 mb-2 rounded" />
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" name="remove_photo" value="1" class="checkbox checkbox-sm" />
+          <span class="label-text text-sm text-error">Remover foto</span>
+        </label>
+      </div>
     @endif
 
     <input type="file" name="photo" class="file-input file-input-bordered w-full" accept="image/*" />

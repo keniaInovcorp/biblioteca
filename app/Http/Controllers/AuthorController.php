@@ -68,8 +68,15 @@ class AuthorController extends Controller
     {
         $data = $request->validated();
 
+        if ($request->has('remove_photo') && $request->remove_photo == '1') {
+            if ($author->photo_path && Storage::disk('public')->exists($author->photo_path)) {
+                Storage::disk('public')->delete($author->photo_path);
+            }
+            $data['photo_path'] = null;
+        }
+
         if ($request->hasFile('photo')) {
-            
+            // Remove foto antiga 
             if ($author->photo_path && Storage::disk('public')->exists($author->photo_path)) {
                 Storage::disk('public')->delete($author->photo_path);
             }

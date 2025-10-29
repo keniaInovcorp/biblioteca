@@ -19,4 +19,9 @@ class Publisher extends Model
     {
         return $this->logo_path ? Storage::url($this->logo_path) : null;
     }
+
+    public function books()
+    {
+        return $this->hasMany(Book::class);
+    }
 }

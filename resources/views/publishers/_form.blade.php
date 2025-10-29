@@ -20,7 +20,13 @@
     </label>
 
     @if($isEdit && $publisher->logo_url)
-      <img src="{{ $publisher->logo_url }}" alt="logo" class="w-24 mb-2 rounded" />
+      <div class="mb-3">
+        <img src="{{ $publisher->logo_url }}" alt="logo" class="w-24 mb-2 rounded" />
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" name="remove_logo" value="1" class="checkbox checkbox-sm" />
+          <span class="label-text text-sm text-error">Remover logótipo</span>
+        </label>
+      </div>
     @endif
 
     <input type="file" name="logo" class="file-input file-input-bordered w-full" accept="image/*" />

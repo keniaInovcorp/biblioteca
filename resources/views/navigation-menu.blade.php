@@ -23,6 +23,10 @@
                     <x-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
                         {{ __('Autores') }}
                     </x-nav-link>
+
+                    <x-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
+                        {{ __('Livros') }}
+                    </x-nav-link>
                 </div>
 
             </div>
@@ -158,6 +162,10 @@
 
             <x-responsive-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
                 {{ __('Autores') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
+                {{ __('Livros') }}
             </x-responsive-nav-link>
         </div>
 

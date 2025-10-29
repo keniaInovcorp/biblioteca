@@ -20,4 +20,10 @@ class Author extends Model
     {
         return $this->photo_path ? Storage::url($this->photo_path) : null;
     }
+
+    // Relação com Books - belongsToMany - many-to-many
+    public function books()
+    {
+        return $this->belongsToMany(Book::class, 'book_author');
+    }
 }

@@ -68,8 +68,16 @@ class PublisherController extends Controller
     {
         $data = $request->validated();
 
+        if ($request->has('remove_logo') && $request->remove_logo == '1') {
+            if ($publisher->logo_path && Storage::disk('public')->exists($publisher->logo_path)) {
+                Storage::disk('public')->delete($publisher->logo_path);
+            }
+            $data['logo_path'] = null;
+        }
+
+        // Se tiver novo logo, substitui
         if ($request->hasFile('logo')) {
-         
+            // Remove logo antigo 
             if ($publisher->logo_path && Storage::disk('public')->exists($publisher->logo_path)) {
                 Storage::disk('public')->delete($publisher->logo_path);
             }
