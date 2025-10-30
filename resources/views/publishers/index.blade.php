@@ -28,7 +28,7 @@
 
         <!-- Alert Success -->
         @if(session('success'))
-            <div class="alert alert-success shadow-lg mb-6">
+            <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3500)" x-show="show" x-transition class="alert alert-success shadow-lg mb-6">
                 <div>
                     <svg class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
