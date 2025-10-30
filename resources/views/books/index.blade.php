@@ -23,7 +23,7 @@
     </x-slot>
 
     <div class="container mx-auto px-4 py-8">
-        
+
         <!-- Alert Success -->
         @if(session('success'))
             <div class="alert alert-success shadow-lg mb-6">
@@ -41,11 +41,11 @@
             <div class="card bg-white shadow-xl">
                 <div class="card-body p-0">
                     <ul class="list bg-white rounded-box">
-                        
+
                         <li class="p-4 pb-2 text-xs opacity-60 tracking-wide uppercase">
                             Livros da biblioteca ({{ $books->total() }} {{ $books->total() == 1 ? 'livro' : 'livros' }})
                         </li>
-                        
+
                         @foreach($books as $book)
                         <li class="list-row hover:bg-base-50 transition-colors">
                             <!-- Cover Image -->
@@ -60,7 +60,7 @@
                                     </div>
                                 @endif
                             </div>
-                            
+
                             <!-- Book Info -->
                             <div class="flex-1">
                                 <div class="font-semibold text-base">{{ $book->name }}</div>
@@ -78,12 +78,12 @@
                                     @endif
                                 </div>
                             </div>
-                            
+
                             <!-- Action Buttons -->
                             <div class="flex gap-1 items-center">
                                 <!-- View Button -->
-                                <button type="button" 
-                                        class="btn btn-square btn-ghost btn-sm tooltip" 
+                                <button type="button"
+                                        class="btn btn-square btn-ghost btn-sm tooltip"
                                         data-tip="Ver detalhes"
                                         onclick="window.location.href='{{ route('books.show', $book) }}'">
                                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,23 +91,23 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                
+
                                 @auth
                                 <!-- Edit Button -->
-                                <button type="button" 
-                                        class="btn btn-square btn-ghost btn-sm tooltip" 
+                                <button type="button"
+                                        class="btn btn-square btn-ghost btn-sm tooltip"
                                         data-tip="Editar"
                                         onclick="window.location.href='{{ route('books.edit', $book) }}'">
                                     <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                 </button>
-                                
+
                                 <!-- Delete Button -->
                                 <form action="{{ route('books.destroy', $book) }}" method="POST" class="contents">
                                     @csrf @method('DELETE')
-                                    <button type="submit" 
-                                            class="btn btn-square btn-ghost btn-sm tooltip text-error hover:bg-error hover:text-white" 
+                                    <button type="submit"
+                                            class="btn btn-square btn-ghost btn-sm tooltip text-error hover:bg-error hover:text-white"
                                             data-tip="Eliminar"
                                             onclick="return confirm('Eliminar {{ $book->name }}?')">
                                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,46 +119,15 @@
                             </div>
                         </li>
                         @endforeach
-                        
+
                     </ul>
                 </div>
             </div>
 
             <!-- Pagination -->
             @if($books->hasPages())
-                <div class="flex justify-center mt-8" id="pagination-wrapper">
-                    {{ $books->links() }}
-                </div>
+                {{ $books->links() }}
             @endif
-
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const paginationWrapper = document.getElementById('pagination-wrapper');
-                    if (paginationWrapper) {
-                        const textElement = paginationWrapper.querySelector('p');
-                        if (textElement) {
-                            const textContainer = document.createElement('div');
-                            textContainer.className = 'flex justify-center mt-3';
-                            
-                            const clonedText = textElement.cloneNode(true);
-                            const originalText = clonedText.textContent;
-                            
-                            const translatedText = originalText
-                                .replace(/Showing/g, 'Mostrando')
-                                .replace(/to/g, 'a')
-                                .replace(/of/g, 'de')
-                                .replace(/results/g, 'resultados');
-                            
-                            clonedText.textContent = translatedText;
-                            textContainer.appendChild(clonedText);
-                            
-                            textElement.style.display = 'none';
-                            
-                            paginationWrapper.parentNode.insertBefore(textContainer, paginationWrapper.nextSibling);
-                        }
-                    }
-                });
-            </script>
 
         @else
             <!-- Empty State - Minimal & Beautiful -->
@@ -170,13 +139,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
                     </div>
-                    
+
                     <!-- Simple text -->
                     <div>
                         <h3 class="text-lg font-semibold">Nenhum livro</h3>
                         <p class="text-sm opacity-60">Adicione o primeiro livro à sua biblioteca</p>
                     </div>
-                    
+
                     <!-- Clean button -->
                     @auth
                         <a href="{{ route('books.create') }}" class="btn btn-primary btn-sm gap-2">
@@ -195,4 +164,3 @@
         @endif
     </div>
 </x-app-layout>
-

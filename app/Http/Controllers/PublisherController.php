@@ -12,10 +12,38 @@ class PublisherController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-         $publishers = Publisher::orderBy('name')->paginate(5);
-        return view('publishers.index', compact('publishers'));
+        $searchTerm = (string) $request->query('q', '');
+        $sortField = (string) $request->query('sort', 'name');
+        $sortDir = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $hasLogo = $request->query('has_logo');
+
+        $allowedSorts = ['name', 'created_at'];
+        if (! in_array($sortField, $allowedSorts, true)) {
+            $sortField = 'name';
+        }
+
+        $query = Publisher::query();
+
+        // Search by name
+        if ($searchTerm !== '') {
+            $query->where('name', 'like', "%{$searchTerm}%");
+        }
+
+        // Filter logo presence
+        if ($hasLogo === '1') {
+            $query->whereNotNull('logo_path');
+        } elseif ($hasLogo === '0') {
+            $query->whereNull('logo_path');
+        }
+
+        $publishers = $query
+            ->orderBy($sortField, $sortDir)
+            ->paginate(10)
+            ->appends($request->query());
+
+        return view('publishers.index', compact('publishers', 'searchTerm', 'sortField', 'sortDir', 'hasLogo'));
     }
 
     /**
@@ -77,7 +105,7 @@ class PublisherController extends Controller
 
         // Se tiver novo logo, substitui
         if ($request->hasFile('logo')) {
-            // Remove logo antigo 
+            // Remove logo antigo
             if ($publisher->logo_path && Storage::disk('public')->exists($publisher->logo_path)) {
                 Storage::disk('public')->delete($publisher->logo_path);
             }
