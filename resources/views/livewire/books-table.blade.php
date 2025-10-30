@@ -26,6 +26,7 @@
                             <button type="button" class="btn btn-xs btn-ghost" wire:click="$set('search','')">Limpar</button>
                         @endif
                     </label>
+                    <a href="{{ route('books.export', ['q' => $search, 'sfield' => $searchField, 'sort' => $sortField, 'dir' => $sortDir]) }}" class="btn btn-outline btn-xs" target="_blank">Exportar CSV</a>
                 </div>
             </div>
             <table class="table table-zebra table-sm">

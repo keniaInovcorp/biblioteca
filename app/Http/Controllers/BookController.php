@@ -8,6 +8,8 @@ use App\Models\Publisher;
 use App\Models\Author;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\BooksExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BookController extends Controller
 {
@@ -90,7 +92,7 @@ class BookController extends Controller
         }
 
         if ($request->hasFile('cover_image')) {
-            // Remove imagem antiga 
+            // Remove imagem antiga
             if ($book->cover_image_path && Storage::disk('public')->exists($book->cover_image_path)) {
                 Storage::disk('public')->delete($book->cover_image_path);
             }
@@ -127,5 +129,66 @@ class BookController extends Controller
         return redirect()
             ->route('books.index')
             ->with('success', 'Livro removido com sucesso.');
+    }
+
+    /**
+     * Export books as Excel
+     */
+    public function export(Request $request)
+    {
+        $search = (string) $request->query('q', '');
+        $searchField = (string) $request->query('sfield', 'all');
+        $sortField = (string) $request->query('sort', 'name');
+        $sortDir = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $allowedSorts = ['name', 'created_at', 'price', 'publisher_name', 'authors_min_name'];
+        if (! in_array($sortField, $allowedSorts, true)) {
+            $sortField = 'name';
+        }
+
+        $term = "%{$search}%";
+        $query = Book::query()
+            ->with(['publisher', 'authors'])
+            ->select('books.*')
+            ->when($search !== '', function ($q) use ($term, $searchField) {
+                if ($searchField === 'name') {
+                    $q->where('books.name', 'like', $term);
+                } elseif ($searchField === 'publisher') {
+                    $q->whereHas('publisher', fn($p) => $p->where('name', 'like', $term));
+                } elseif ($searchField === 'author') {
+                    $q->whereHas('authors', fn($a) => $a->where('name', 'like', $term));
+                } elseif ($searchField === 'price') {
+                    $numeric = preg_replace('/[^0-9.,-]/', '', $term);
+                    $numeric = str_replace(',', '.', $numeric);
+                    $value = (float) $numeric;
+                    if ($value > 0) {
+                        $q->where('price', $value);
+                    }
+                } else {
+                    $q->where(function ($qq) use ($term) {
+                        $qq->where('books.name', 'like', $term)
+                           ->orWhere('isbn', 'like', $term)
+                           ->orWhereHas('publisher', fn($p) => $p->where('name', 'like', $term))
+                           ->orWhereHas('authors', fn($a) => $a->where('name', 'like', $term));
+                    });
+                }
+            });
+
+        if ($sortField === 'publisher_name') {
+            $query->leftJoin('publishers', 'publishers.id', '=', 'books.publisher_id')
+                ->addSelect('publishers.name as publisher_name')
+                ->orderBy('publisher_name', $sortDir);
+        } elseif ($sortField === 'authors_min_name') {
+            $query->selectSub(
+                'SELECT MIN(authors.name) FROM book_author ba JOIN authors ON authors.id = ba.author_id WHERE ba.book_id = books.id',
+                'authors_min_name'
+            )->orderBy('authors_min_name', $sortDir);
+        } else {
+            $query->orderBy($sortField, $sortDir);
+        }
+
+        $filename = 'livros_' . now()->format('Ymd_His');
+
+        return Excel::download(new BooksExport($query), $filename . '.xlsx');
     }
 }

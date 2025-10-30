@@ -22,5 +22,6 @@ Route::middleware([
 Route::middleware(['auth'])->group(function () {
     Route::resource('publishers', PublisherController::class);
     Route::resource('authors', AuthorController::class);
+    Route::get('books/export', [BookController::class, 'export'])->name('books.export');
     Route::resource('books', BookController::class);
 });
