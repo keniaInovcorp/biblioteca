@@ -24,24 +24,30 @@ class BooksExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Nome',
             'ISBN',
+            'Nome',
             'Editora',
             'Autores',
+            'Bibliografia',
+            'Imagem da Capa',
             'Preço',
-            'Criado em',
         ];
     }
 
     public function map($book): array
     {
+        $coverUrl = $book->cover_image_url 
+            ? url($book->cover_image_url) 
+            : 'Sem imagem';
+
         return [
-            $book->name,
             $book->isbn,
-            optional($book->publisher)->name,
-            $book->authors->pluck('name')->join(', '),
-            $book->price,
-            optional($book->created_at)->format('d/m/Y H:i'),
+            $book->name,
+            optional($book->publisher)->name ?? '',
+            $book->authors->pluck('name')->join(', ') ?: '',
+            $book->bibliography ?? '',
+            $coverUrl,
+            $book->price ?? '',
         ];
     }
 }
