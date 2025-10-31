@@ -150,7 +150,7 @@ class BookController extends Controller
         $query = Book::query()
             ->with(['publisher', 'authors'])
             ->select('books.*')
-            ->when($search !== '', function ($q) use ($term, $searchField) {
+            ->when($search !== '', function ($q) use ($term, $searchField, $search) {
                 if ($searchField === 'name') {
                     $q->where('books.name', 'like', $term);
                 } elseif ($searchField === 'publisher') {
@@ -158,11 +158,18 @@ class BookController extends Controller
                 } elseif ($searchField === 'author') {
                     $q->whereHas('authors', fn($a) => $a->where('name', 'like', $term));
                 } elseif ($searchField === 'price') {
-                    $numeric = preg_replace('/[^0-9.,-]/', '', $term);
+                    // Price 12.5 or full range 10-20
+                    $numeric = preg_replace('/[^0-9.,-]/', '', $search);
                     $numeric = str_replace(',', '.', $numeric);
-                    $value = (float) $numeric;
-                    if ($value > 0) {
-                        $q->where('price', $value);
+                    if (str_contains($numeric, '-')) {
+                        // price between 10-20
+                        [$min, $max] = array_map('trim', explode('-', $numeric, 2));
+                        if ($min !== '' && $max !== '') {
+                            $q->where('price', '>=', (float)$min)
+                              ->where('price', '<=', (float)$max);
+                        }
+                    } elseif ($numeric !== '') {
+                        $q->where('price', (float)$numeric);
                     }
                 } else {
                     $q->where(function ($qq) use ($term) {

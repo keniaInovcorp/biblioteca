@@ -65,10 +65,14 @@ class BooksTable extends Component
                     $numeric = preg_replace('/[^0-9.,-]/', '', $this->search);
                     $numeric = str_replace(',', '.', $numeric);
                     if (str_contains($numeric, '-')) {
-                        [$min, $max] = array_pad(array_map('trim', explode('-', $numeric, 2)), 2, null);
-                        if ($min !== null && $min !== '') { $q->where('price', '>=', (float)$min); }
-                        if ($max !== null && $max !== '') { $q->where('price', '<=', (float)$max); }
+                        // Price between 10-20
+                        [$min, $max] = array_map('trim', explode('-', $numeric, 2));
+                        if ($min !== '' && $max !== '') {
+                            $q->where('price', '>=', (float)$min)
+                              ->where('price', '<=', (float)$max);
+                        }
                     } elseif ($numeric !== '') {
+                        // Exact value: 12.5
                         $q->where('price', (float)$numeric);
                     }
                 } else {
