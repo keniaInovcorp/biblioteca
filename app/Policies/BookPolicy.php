@@ -13,7 +13,8 @@ class BookPolicy
      */
     public function viewAny(User $user): bool
     {
-         return false;
+        // Both admin and citizen can view books
+        return true;
     }
 
     /**
@@ -21,7 +22,8 @@ class BookPolicy
      */
     public function view(User $user, Book $book): bool
     {
-         return false;
+        // Both admin and citizen can view books
+        return true;
     }
 
     /**
@@ -29,7 +31,8 @@ class BookPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        // Only admin can create books
+        return $user->hasRole('admin');
     }
 
     /**
@@ -37,10 +40,8 @@ class BookPolicy
      */
     public function update(User $user, Book $book): bool
     {
-        return false;
-
-        // If only the creator can edit:
-        // return $user->id === $book->created_by;
+        // Only admin can update books
+        return $user->hasRole('admin');
     }
 
     /**
@@ -48,7 +49,8 @@ class BookPolicy
      */
     public function delete(User $user, Book $book): bool
     {
-         return false;
+        // Only admin can delete books
+        return $user->hasRole('admin');
     }
 
     /**

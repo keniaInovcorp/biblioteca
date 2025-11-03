@@ -10,14 +10,14 @@
                 </h1>
             </div>
             <div class="flex-none">
-                @auth
+                @can('create', App\Models\Book::class)
                     <a href="{{ route('books.create') }}" class="btn btn-primary gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
                         Adicionar Livro
                     </a>
-                @endauth
+                @endcan
             </div>
         </div>
     </x-slot>
