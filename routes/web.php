@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\AdminController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,4 +26,5 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::get('books/export', [BookController::class, 'export'])->name('books.export');
     Route::resource('books', BookController::class);
+    Route::resource('admins', AdminController::class)->except(['edit', 'update']);
 });

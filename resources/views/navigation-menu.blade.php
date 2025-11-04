@@ -27,6 +27,12 @@
                     <x-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
                         {{ __('Livros') }}
                     </x-nav-link>
+
+                    @can('viewAny', App\Models\User::class)
+                    <x-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
+                        {{ __('Administradores') }}
+                    </x-nav-link>
+                    @endcan
                 </div>
 
             </div>
@@ -156,6 +162,12 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
+            @can('viewAny', App\Models\User::class)
+            <x-responsive-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
+                {{ __('Administradores') }}
+            </x-responsive-nav-link>
+            @endcan
+
             <x-responsive-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
                 {{ __('Editoras') }}
             </x-responsive-nav-link>
@@ -167,6 +179,7 @@
             <x-responsive-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
                 {{ __('Livros') }}
             </x-responsive-nav-link>
+
         </div>
 
 
