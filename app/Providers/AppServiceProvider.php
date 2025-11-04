@@ -3,9 +3,22 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Policies\AdminPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
+
+    /**
+     * The policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        User::class => AdminPolicy::class,
+    ];
+
     /**
      * Register any application services.
      */
@@ -19,6 +32,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::policy(User::class, AdminPolicy::class);
     }
 }
