@@ -43,7 +43,7 @@ class Book extends Model
     public function activeSubmissions()
     {
         return $this->hasMany(Submission::class)
-            ->whereIn('status', ['pending', 'active']);
+            ->whereIn('status', ['created', 'overdue']);
     }
 
     /**

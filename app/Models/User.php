@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -67,14 +68,20 @@ class User extends Authenticatable
         ];
     }
 
-    public function submissions()
+    /**
+     * @return HasMany<Submission>
+     */
+    public function submissions(): HasMany
     {
         return $this->hasMany(Submission::class);
     }
 
-    public function activeSubmissions()
+    /**
+     * @return HasMany<Submission>
+     */
+    public function activeSubmissions(): HasMany
     {
         return $this->hasMany(Submission::class)
-            ->whereIn('status', ['pending', 'active']);
+            ->whereIn('status', ['created', 'overdue']);
     }
 }

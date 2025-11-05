@@ -28,5 +28,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('books/export', [BookController::class, 'export'])->name('books.export');
     Route::resource('books', BookController::class);
     Route::resource('admins', AdminController::class)->except(['edit', 'update']);
+
+    Route::post('submissions/{submission}/confirm-return', [SubmissionController::class, 'confirmReturn'])->name('submissions.confirm-return');
+
     Route::resource('submissions', SubmissionController::class);
 });

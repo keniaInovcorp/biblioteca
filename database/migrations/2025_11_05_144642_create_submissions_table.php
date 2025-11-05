@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('expected_return_date'); // 5 days after
             $table->date('received_at')->nullable(); // Actual date of receipt Admin
             $table->integer('days_elapsed')->nullable();
-            $table->enum('status', ['pending', 'active', 'returned', 'cancelled'])->default('pending');
+            $table->enum('status', ['created', 'overdue', 'returned'])->default('created');
             $table->text('notes')->nullable();
             $table->timestamps();
 

@@ -50,11 +50,37 @@ class Submission extends Model
     }
 
     /**
-     * Check if submission is active (pending or active status)
+     * Check if submission is active (created or overdue status)
      */
     public function isActive(): bool
     {
-        return in_array($this->status, ['pending', 'active']);
+        return in_array($this->status, ['created', 'overdue']);
+    }
+
+    /**
+     * Check if submission is overdue
+     */
+    public function isOverdue(): bool
+    {
+        return $this->status === 'overdue' || 
+               ($this->status === 'created' && $this->expected_return_date < now()->startOfDay());
+    }
+
+    /**
+     * Get the effective status (considers overdue calculation)
+     */
+    public function getEffectiveStatusAttribute(): string
+    {
+        if ($this->status === 'returned') {
+            return 'returned';
+        }
+
+        // If created but past expected date, it's effectively overdue
+        if ($this->status === 'created' && $this->expected_return_date < now()->startOfDay()) {
+            return 'overdue';
+        }
+
+        return $this->status;
     }
 }
 

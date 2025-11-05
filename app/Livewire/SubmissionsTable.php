@@ -58,7 +58,7 @@ class SubmissionsTable extends Component
 
     public function render()
     {
-        $allowedSorts = ['request_number', 'request_date', 'expected_return_date', 'status', 'book_id'];
+        $allowedSorts = ['request_number', 'request_date', 'expected_return_date', 'received_at', 'days_elapsed', 'status', 'book_id', 'book_name', 'user_name'];
         $sortField = in_array($this->sortField, $allowedSorts, true) ? $this->sortField : 'request_date';
         $sortDir = strtolower($this->sortDir) === 'desc' ? 'desc' : 'asc';
 
@@ -68,31 +68,34 @@ class SubmissionsTable extends Component
         $isAdmin = $user->hasRole('admin');
 
         $query = Submission::with(['user', 'book'])
+            ->join('books', 'submissions.book_id', '=', 'books.id')
+            ->join('users', 'submissions.user_id', '=', 'users.id')
+            ->select('submissions.*')
             ->where(function ($q) use ($term, $isAdmin, $user) {
-                $q->where('request_number', 'like', $term)
-                  ->orWhereHas('book', function ($bookQuery) use ($term) {
-                      $bookQuery->where('name', 'like', $term);
-                  })
-                  ->orWhereHas('user', function ($userQuery) use ($term) {
-                      $userQuery->where('name', 'like', $term)
-                                ->orWhere('email', 'like', $term);
-                  });
+                $q->where('submissions.request_number', 'like', $term)
+                  ->orWhere('books.name', 'like', $term)
+                  ->orWhere('users.name', 'like', $term)
+                  ->orWhere('users.email', 'like', $term);
             });
 
         // If you are not an admin, filter only requests from that user.
         if (!$isAdmin) {
-            $query->where('user_id', $user->id);
+            $query->where('submissions.user_id', $user->id);
         }
 
         if ($this->statusFilter !== '') {
-            $query->where('status', $this->statusFilter);
+            $query->where('submissions.status', $this->statusFilter);
         }
 
-        // Case-insensitive sorting for text fields
+        // Handle sorting
         if ($sortField === 'request_number') {
-            $query->orderByRaw("LOWER({$sortField}) {$sortDir}");
+            $query->orderByRaw("LOWER(submissions.{$sortField}) {$sortDir}");
+        } elseif ($sortField === 'book_name') {
+            $query->orderByRaw("LOWER(books.name) {$sortDir}");
+        } elseif ($sortField === 'user_name') {
+            $query->orderByRaw("LOWER(users.name) {$sortDir}");
         } else {
-            $query->orderBy($sortField, $sortDir);
+            $query->orderBy("submissions.{$sortField}", $sortDir);
         }
 
         $submissions = $query->paginate($this->perPage);
@@ -101,14 +104,20 @@ class SubmissionsTable extends Component
         $stats = null;
         if ($isAdmin) {
             $stats = [
-                'active' => Submission::where('status', 'active')->count(),
-                'pending' => Submission::where('status', 'pending')->count(),
-                'due_soon' => Submission::where('status', 'active')
+                'active' => Submission::where('status', 'created')->count(),
+                'overdue' => Submission::where(function ($q) {
+                    $q->where('status', 'overdue')
+                      ->orWhere(function ($q) {
+                          $q->where('status', 'created')
+                            ->whereDate('expected_return_date', '<', now());
+                      });
+                })->count(),
+                'due_soon' => Submission::where('status', 'created')
                     ->whereDate('expected_return_date', '<=', now()->addDays(2))
                     ->whereDate('expected_return_date', '>=', now())
                     ->count(),
-                'overdue' => Submission::where('status', 'active')
-                    ->whereDate('expected_return_date', '<', now())
+                'returned_today' => Submission::where('status', 'returned')
+                    ->whereDate('received_at', now())
                     ->count(),
             ];
         }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Book;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SubmissionRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class SubmissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return $this->user() !== null;
     }
 
     /**
@@ -22,8 +24,24 @@ class SubmissionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'book_id' => [
+                'required',
+                'exists:books,id',
+                function ($attribute, $value, $fail) {
+                    $book = Book::find($value);
+                    if ($book && !$book->isAvailable()) {
+                        $fail('Este livro não está disponível para requisição.');
+                    }
+                },
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'book_id.required' => 'O livro é obrigatório.',
+            'book_id.exists' => 'O livro selecionado não existe.',
         ];
     }
 }
-
