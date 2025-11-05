@@ -28,6 +28,10 @@
                         {{ __('Livros') }}
                     </x-nav-link>
 
+                    <x-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
+                        {{ __('Requisições') }}
+                    </x-nav-link>
+
                     @can('viewAny', App\Models\User::class)
                     <x-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
                         {{ __('Administradores') }}

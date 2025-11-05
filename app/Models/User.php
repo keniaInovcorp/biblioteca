@@ -66,4 +66,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function activeSubmissions()
+    {
+        return $this->hasMany(Submission::class)
+            ->whereIn('status', ['pending', 'active']);
+    }
 }

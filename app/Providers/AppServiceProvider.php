@@ -5,7 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
+use App\Models\Submission;
 use App\Policies\AdminPolicy;
+use App\Policies\SubmissionPolicy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected $policies = [
         User::class => AdminPolicy::class,
+        Submission::class => SubmissionPolicy::class,
     ];
 
     /**
@@ -33,5 +36,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(User::class, AdminPolicy::class);
+        Gate::policy(Submission::class, SubmissionPolicy::class);
     }
 }

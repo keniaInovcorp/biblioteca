@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class Book extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'isbn',
         'name',
@@ -33,5 +33,24 @@ class Book extends Model
     public function getCoverImageUrlAttribute()
     {
         return $this->cover_image_path ? Storage::url($this->cover_image_path) : null;
+    }
+
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function activeSubmissions()
+    {
+        return $this->hasMany(Submission::class)
+            ->whereIn('status', ['pending', 'active']);
+    }
+
+    /**
+     * Check if book is available for submission
+     */
+    public function isAvailable(): bool
+    {
+        return !$this->activeSubmissions()->exists();
     }
 }
