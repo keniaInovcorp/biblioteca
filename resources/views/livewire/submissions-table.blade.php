@@ -1,45 +1,79 @@
 <div class="space-y-4">
     @if($isAdmin && $stats)
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-        <div class="stat bg-base-200 rounded-lg shadow">
-            <div class="stat-title">Requisições Ativas</div>
-            <div class="stat-value text-primary">{{ $stats['active'] }}</div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <!-- Card:Active Requests -->
+        <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content/70">Requisições Ativas</h3>
+                        <p class="text-3xl font-bold text-primary mt-2 text-center">{{ $stats['active'] }}</p>
+                    </div>
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-primary">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stat bg-base-200 rounded-lg shadow">
-            <div class="stat-title">Atrasadas</div>
-            <div class="stat-value text-error">{{ $stats['overdue'] }}</div>
+
+        <!-- Card: Requests in the last 30 days -->
+        <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content/70">Requisições nos últimos 30 dias</h3>
+                        <p class="text-3xl font-bold text-info mt-2 text-center">{{ $stats['last_30_days'] }}</p>
+                    </div>
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-info/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-info">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="stat bg-base-200 rounded-lg shadow">
-            <div class="stat-title">Próximas do Vencimento</div>
-            <div class="stat-value text-info">{{ $stats['due_soon'] }}</div>
-        </div>
-        <div class="stat bg-base-200 rounded-lg shadow">
-            <div class="stat-title">Devolvidas Hoje</div>
-            <div class="stat-value text-success">{{ $stats['returned_today'] }}</div>
+
+        <!-- Card: Books delivered today -->
+        <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content/70">Livros entregues Hoje</h3>
+                        <p class="text-3xl font-bold text-success mt-2 text-center">{{ $stats['returned_today'] }}</p>
+                    </div>
+                    <div class="flex items-center justify-center w-16 h-16 rounded-full bg-success/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-success">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     @endif
 
     <div class="card bg-base-100 shadow-xl overflow-x-auto">
         <div class="card-body p-0">
-            <div class="px-3 py-3 flex items-center justify-between gap-2">
+            <div class="px-3 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <h2 class="text-lg font-semibold whitespace-nowrap">Requisições</h2>
-                <div class="flex items-center gap-2 flex-1 justify-end min-w-0">
+                <div class="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:justify-end">
                     @if($isAdmin)
-                    <select class="select select-bordered select-xs min-w-0 w-auto flex-none shrink-0" wire:model.live="statusFilter">
+                    <select class="select select-bordered flex-none shrink-0 sm:w-[180px]" wire:model.live="statusFilter">
                         <option value="">Todos os Status</option>
                         <option value="created">Criada</option>
                         <option value="overdue">Atrasada</option>
                         <option value="returned">Devolvida</option>
                     </select>
                     @endif
-                    <label class="input input-bordered flex items-center gap-2 min-w-[42rem] md:min-w-[58rem] lg:min-w-[70rem] max-w-full">
+                    <label class="input input-bordered flex items-center gap-2 flex-1 sm:flex-initial sm:min-w-[300px]">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 opacity-70">
                             <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.16 12.06l3.77 3.77a.75.75 0 1 0 1.06-1.06l-3.77-3.77A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/>
                         </svg>
-                        <input type="text" class="grow" placeholder="Pesquisar..." wire:model.live.debounce.300ms="search" />
+                        <input type="text" class="grow min-w-0" placeholder="Pesquisar..." wire:model.live.debounce.300ms="search" />
                         @if($search !== '')
-                            <button type="button" class="btn btn-xs btn-ghost" wire:click="$set('search','')">Limpar</button>
+                            <button type="button" class="btn btn-xs btn-ghost flex-none shrink-0" wire:click="$set('search','')">Limpar</button>
                         @endif
                     </label>
                 </div>
@@ -156,7 +190,11 @@
                                 </td>
                                 <td class="align-middle">
                                     @if($submission->days_elapsed !== null)
-                                        {{ $submission->days_elapsed }} {{ $submission->days_elapsed === 1 ? 'dia' : 'dias' }}
+                                        @if($submission->days_elapsed < 5)
+                                            <span class="badge badge-success">{{ $submission->days_elapsed }} {{ $submission->days_elapsed === 1 ? 'dia' : 'dias' }}</span>
+                                        @else
+                                            <span class="badge badge-error">{{ $submission->days_elapsed }} {{ $submission->days_elapsed === 1 ? 'dia' : 'dias' }}</span>
+                                        @endif
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
@@ -169,11 +207,11 @@
                                     $effectiveStatus = $submission->effective_status;
                                 @endphp
                                 @if($effectiveStatus === 'created')
-                                    <span class="badge badge-success">Criada</span>
+                                    <span class="badge bg-gray-500 text-white">Criada</span>
                                 @elseif($effectiveStatus === 'overdue')
                                     <span class="badge badge-error">Atrasada</span>
                                 @elseif($effectiveStatus === 'returned')
-                                    <span class="badge badge-neutral">Devolvida</span>
+                                    <span class="badge badge-success">Devolvida</span>
                                 @endif
                             </td>
                             <td class="align-middle">

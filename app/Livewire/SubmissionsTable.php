@@ -100,22 +100,12 @@ class SubmissionsTable extends Component
 
         $submissions = $query->paginate($this->perPage);
 
-        // Admin statistics
+        // Statistics (only for admin)
         $stats = null;
         if ($isAdmin) {
             $stats = [
-                'active' => Submission::where('status', 'created')->count(),
-                'overdue' => Submission::where(function ($q) {
-                    $q->where('status', 'overdue')
-                      ->orWhere(function ($q) {
-                          $q->where('status', 'created')
-                            ->whereDate('expected_return_date', '<', now());
-                      });
-                })->count(),
-                'due_soon' => Submission::where('status', 'created')
-                    ->whereDate('expected_return_date', '<=', now()->addDays(2))
-                    ->whereDate('expected_return_date', '>=', now())
-                    ->count(),
+                'active' => Submission::whereIn('status', ['created', 'overdue'])->count(),
+                'last_30_days' => Submission::where('request_date', '>=', now()->subDays(30))->count(),
                 'returned_today' => Submission::where('status', 'returned')
                     ->whereDate('received_at', now())
                     ->count(),
