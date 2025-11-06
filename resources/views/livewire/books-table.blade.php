@@ -1,18 +1,20 @@
 <div class="space-y-4">
     <div class="card bg-base-100 shadow-xl overflow-x-auto">
         <div class="card-body p-0">
-            <div class="px-3 py-3 flex items-center justify-between gap-2 whitespace-nowrap">
-                <h2 class="text-lg font-semibold">Livros</h2>
-                <div class="flex items-center gap-2 flex-1 justify-end">
-                    <select class="select select-bordered select-xs min-w-0 w-auto flex-none shrink-0" wire:model.live="searchField">
+            <div class="px-3 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <h2 class="text-lg font-semibold whitespace-nowrap">Livros</h2>
+                <div class="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:justify-end">
+                    <select class="select select-bordered flex-none shrink-0 sm:w-[180px]" wire:model.live="searchField">
                         <option value="all">Todos</option>
                         <option value="name">Nome</option>
                         <option value="publisher">Editora</option>
                         <option value="author">Autor</option>
                         <option value="price">Preço</option>
                     </select>
-                    <label class="input input-bordered flex items-center gap-2 w-[32rem] md:w-[48rem] lg:w-[60rem]">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 opacity-70"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.16 12.06l3.77 3.77a.75.75 0 1 0 1.06-1.06l-3.77-3.77A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
+                    <label class="input input-bordered flex items-center gap-2 flex-1 sm:flex-initial sm:min-w-[300px]">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4 opacity-70">
+                            <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.16 12.06l3.77 3.77a.75.75 0 1 0 1.06-1.06l-3.77-3.77A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/>
+                        </svg>
                         @php
                             $ph = 'Pesquisar';
                             if ($searchField === 'name') $ph = 'Pesquisar por nome';
@@ -21,12 +23,12 @@
                             elseif ($searchField === 'price') $ph = 'Preço (ex.: 12.5 ou 10-20)';
                             else $ph = 'Pesquisar por...';
                         @endphp
-                        <input type="text" class="grow" placeholder="{{ $ph }}" wire:model.live.debounce.300ms="search" />
+                        <input type="text" class="grow min-w-0" placeholder="{{ $ph }}" wire:model.live.debounce.300ms="search" />
                         @if($search !== '')
-                            <button type="button" class="btn btn-xs btn-ghost" wire:click="$set('search','')">Limpar</button>
+                            <button type="button" class="btn btn-xs btn-ghost flex-none shrink-0" wire:click="$set('search','')">Limpar</button>
                         @endif
                     </label>
-                    <a href="{{ route('books.export', ['q' => $search, 'sfield' => $searchField, 'sort' => $sortField, 'dir' => $sortDir]) }}" class="btn btn-outline btn-xs" target="_blank">Exportar CSV</a>
+                    <a href="{{ route('books.export', ['q' => $search, 'sfield' => $searchField, 'sort' => $sortField, 'dir' => $sortDir]) }}" class="btn btn-outline btn-xs flex-none shrink-0" target="_blank">Exportar CSV</a>
                 </div>
             </div>
             <table class="table table-zebra table-sm">
