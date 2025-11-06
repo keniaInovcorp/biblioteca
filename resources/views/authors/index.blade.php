@@ -22,7 +22,7 @@
         </div>
     </x-slot>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="max-w-8xl mx-auto px-4 py-8">
         <livewire:authors-table />
 
         <!-- Alert Success -->
@@ -38,10 +38,10 @@
         @endif
 
         @if(false)
-            <!-- Empty State - Minimal & Beautiful -->
+            
             <div class="flex flex-col items-center justify-center py-12">
                 <div class="text-center space-y-4 max-w-sm">
-                    <!-- Small elegant icon -->
+                    <!-- Small icon -->
                     <div class="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>

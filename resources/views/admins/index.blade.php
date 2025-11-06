@@ -22,7 +22,7 @@
         </div>
     </x-slot>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="max-w-8xl mx-auto px-4 py-8">
         <livewire:admins-table />
         @if(session('success'))
             <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3500)" x-show="show" x-transition class="alert alert-success shadow-lg mt-6">

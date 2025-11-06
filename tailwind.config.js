@@ -17,6 +17,10 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            maxWidth: {
+                'container-lg': 'calc(100% + 10%)',
+                '8xl': '88.4rem', 
+            },
         },
     },
 

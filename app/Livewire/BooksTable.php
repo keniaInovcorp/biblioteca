@@ -3,6 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\Book;
+use App\Models\Submission;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -29,9 +32,54 @@ class BooksTable extends Component
     #[Url(as: 'per_page')]
     public int $perPage = 5;
 
+    public $successMessage = '';
+    public $errorMessage = '';
+
     public function updatingSearch(): void { $this->resetPage(); }
     public function updatingSearchField(): void { $this->resetPage(); }
     public function updatingPerPage(): void { $this->resetPage(); }
+
+    public function requestBook($bookId)
+    {
+        $this->successMessage = '';
+        $this->errorMessage = '';
+
+        if (!Gate::allows('create', Submission::class)) {
+            $this->errorMessage = 'Você não tem permissão para criar requisições.';
+            return;
+        }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Validate limit of 3 active submissions
+        $activeSubmissionsCount = $user->activeSubmissions()->count();
+        if ($activeSubmissionsCount >= 3) {
+            $this->errorMessage = 'Você já tem 3 requisições ativas. Devolva um livro antes de requisitar outro.';
+            return;
+        }
+
+        $book = Book::findOrFail($bookId);
+
+        // Check availability
+        if (!$book->isAvailable()) {
+            $this->errorMessage = 'Este livro não está disponível para requisição.';
+            return;
+        }
+
+        // Create submission
+        Submission::create([
+            'request_number' => Submission::generateRequestNumber(),
+            'user_id' => $user->id,
+            'book_id' => $book->id,
+            'request_date' => now(),
+            'expected_return_date' => now()->addDays(5),
+            'status' => 'created',
+        ]);
+
+        $this->successMessage = 'Requisição criada com sucesso!';
+        $this->resetPage(); // Refresh the table
+    }
 
     public function sortBy(string $field): void
     {
@@ -46,7 +94,7 @@ class BooksTable extends Component
 
     public function render()
     {
-        $allowedSorts = ['name', 'created_at', 'price', 'publisher_name', 'authors_min_name'];
+        $allowedSorts = ['name', 'price', 'publisher_name', 'authors_min_name'];
         $sortField = in_array($this->sortField, $allowedSorts, true) ? $this->sortField : 'name';
         $sortDir = strtolower($this->sortDir) === 'desc' ? 'desc' : 'asc';
 
@@ -100,8 +148,13 @@ class BooksTable extends Component
 
         $books = $query->paginate($this->perPage);
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $canRequestMore = $user ? $user->activeSubmissions()->count() < 3 : false;
+
         return view('livewire.books-table', [
             'books' => $books,
+            'canRequestMore' => $canRequestMore,
         ]);
     }
 }

@@ -1,5 +1,22 @@
 <div class="space-y-4">
-    <div class="card bg-base-100 shadow-xl overflow-x-auto">
+    <!-- Success/Error Messages -->
+    @if($successMessage)
+        <div x-data="{ show: true }" x-init="setTimeout(() => { show = false; $wire.set('successMessage', '') }, 3000)" x-show="show" x-transition class="alert alert-success shadow-lg">
+            <svg class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-white">{{ $successMessage }}</span>
+        </div>
+    @endif
+    @if($errorMessage)
+        <div x-data="{ show: true }" x-init="setTimeout(() => { show = false; $wire.set('errorMessage', '') }, 3000)" x-show="show" x-transition class="alert alert-error shadow-lg">
+            <svg class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>{{ $errorMessage }}</span>
+        </div>
+    @endif
+    <div class="card bg-base-100 shadow-xl">
         <div class="card-body p-0">
             <div class="px-3 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <h2 class="text-lg font-semibold whitespace-nowrap">Livros</h2>
@@ -31,11 +48,11 @@
                     <a href="{{ route('books.export', ['q' => $search, 'sfield' => $searchField, 'sort' => $sortField, 'dir' => $sortDir]) }}" class="btn btn-outline btn-xs flex-none shrink-0" target="_blank">Exportar CSV</a>
                 </div>
             </div>
-            <table class="table table-zebra table-sm">
+            <table class="table table-zebra table-sm w-full">
                 <thead>
                     <tr>
                         <th class="w-16">Capa</th>
-                        <th>
+                        <th class="w-[20%]">
                             <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('name')">
                                 Nome
                                 @if($sortField === 'name')
@@ -44,7 +61,7 @@
                             </button>
                             <div class="text-xs opacity-60">ISBN</div>
                         </th>
-                        <th>
+                        <th class="w-[12%]">
                             <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('publisher_name')">
                                 Editora
                                 @if($sortField === 'publisher_name')
@@ -52,7 +69,7 @@
                                 @endif
                             </button>
                         </th>
-                        <th>
+                        <th class="w-[15%]">
                             <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('authors_min_name')">
                                 Autores
                                 @if($sortField === 'authors_min_name')
@@ -60,7 +77,7 @@
                                 @endif
                             </button>
                         </th>
-                        <th>
+                        <th class="w-[8%]">
                             <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('price')">
                                 Preço
                                 @if($sortField === 'price')
@@ -68,16 +85,11 @@
                                 @endif
                             </button>
                         </th>
-                        <th class="whitespace-nowrap">
-                            <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('created_at')">
-                                Criado em
-                                @if($sortField === 'created_at')
-                                    <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </button>
+                        <th class="w-[12%] text-center">
+                            Disponibilidade
                         </th>
-                        <th class="w-24 text-center">
-                            <div class="flex w-24 justify-center">Ações</div>
+                        <th class="w-[18%] text-center">
+                            <div class="flex justify-center">Ações</div>
                         </th>
                     </tr>
                 </thead>
@@ -96,15 +108,41 @@
                                 @endif
                             </td>
                             <td class="align-middle">
-                                <div class="font-semibold">{{ $book->name }}</div>
-                                <div class="text-xs opacity-60">ISBN: {{ $book->isbn }}</div>
+                                <div class="font-semibold truncate" title="{{ $book->name }}">{{ $book->name }}</div>
+                                <div class="text-xs opacity-60 truncate" title="ISBN: {{ $book->isbn }}">ISBN: {{ $book->isbn }}</div>
                             </td>
-                            <td class="align-middle">{{ $book->publisher?->name }}</td>
-                            <td class="align-middle">{{ $book->authors->pluck('name')->join(', ') }}</td>
-                            <td class="align-middle">@if($book->price) {{ number_format($book->price, 2, ',', '.') }} € @endif</td>
-                            <td class="align-middle">{{ $book->created_at->format('d/m/Y H:i') }}</td>
                             <td class="align-middle">
-                                <div class="flex w-28 justify-center gap-1 ml-auto">
+                                <div class="truncate" title="{{ $book->publisher?->name }}">{{ $book->publisher?->name }}</div>
+                            </td>
+                            <td class="align-middle">
+                                <div class="truncate" title="{{ $book->authors->pluck('name')->join(', ') }}">{{ $book->authors->pluck('name')->join(', ') }}</div>
+                            </td>
+                            <td class="align-middle">@if($book->price) {{ number_format($book->price, 2, ',', '.') }} € @endif</td>
+                            <td class="align-middle text-center">
+                                @php
+                                    $isAvailable = $book->isAvailable();
+                                @endphp
+                                @if($isAvailable)
+                                    <span class="badge badge-success">Disponível</span>
+                                @else
+                                    <span class="badge badge-error">Indisponível</span>
+                                @endif
+                            </td>
+                            <td class="align-middle">
+                                <div class="flex justify-end gap-1 pr-[60px]">
+                                    @if($isAvailable && $canRequestMore)
+                                    <button type="button" 
+                                            class="btn btn-square btn-ghost btn-sm btn-primary" 
+                                            wire:click="requestBook({{ $book->id }})" 
+                                            aria-label="Requisitar" 
+                                            title="Requisitar livro">
+                                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </button>
+                                    @else
+                                    <div class="w-10 h-10"></div>
+                                    @endif
                                     <a class="btn btn-square btn-ghost btn-sm" href="{{ route('books.show', $book) }}" aria-label="Ver">
                                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     </a>

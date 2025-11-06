@@ -22,7 +22,7 @@
         </div>
     </x-slot>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="max-w-8xl mx-auto px-4 py-8">
         <livewire:books-table />
         @if(session('success'))
             <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3500)" x-show="show" x-transition class="alert alert-success shadow-lg mt-6">
@@ -35,7 +35,7 @@
             </div>
         @endif
         @if(false)
-            <!-- Empty State - Minimal & Beautiful -->
+            <!-- Empty State -->
             <div class="flex flex-col items-center justify-center py-12">
                 <div class="text-center space-y-4 max-w-sm">
 
