@@ -63,9 +63,9 @@ class BookSubmissionsTable extends Component
             ->select('submissions.*')
             ->where('submissions.book_id', $this->book->id);
 
-        // Only show for admin - if not admin, return empty results
+        // If not admin, filter only requests from the current user
         if (!$isAdmin) {
-            $query->whereRaw('1 = 0'); // Force empty results
+            $query->where('submissions.user_id', $user->id);
         }
 
         // Handle sorting

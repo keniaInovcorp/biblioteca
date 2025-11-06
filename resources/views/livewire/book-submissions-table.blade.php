@@ -1,5 +1,4 @@
 <div>
-@if($isAdmin)
 <div class="card bg-base-100 shadow-xl overflow-x-auto mt-6">
     <div class="card-body p-0">
         <div class="px-3 py-3">
@@ -16,6 +15,7 @@
                             @endif
                         </button>
                     </th>
+                    @if($isAdmin)
                     <th>
                         <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('user_name')">
                             Cidadão
@@ -24,6 +24,7 @@
                             @endif
                         </button>
                     </th>
+                    @endif
                     <th class="whitespace-nowrap">
                         <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('request_date')">
                             Data Requisição
@@ -40,6 +41,7 @@
                             @endif
                         </button>
                     </th>
+                    @if($isAdmin)
                     <th class="whitespace-nowrap">
                         <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('received_at')">
                             Data Real de Entrega
@@ -48,6 +50,7 @@
                             @endif
                         </button>
                     </th>
+                    @endif
                     <th>
                         <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('status')">
                             Status
@@ -62,6 +65,7 @@
                 @forelse($submissions as $submission)
                     <tr>
                         <td class="align-middle font-semibold">{{ $submission->request_number }}</td>
+                        @if($isAdmin)
                         <td class="align-middle">
                             <div class="flex items-center gap-2">
                                 @if($submission->user->profile_photo_url)
@@ -76,8 +80,10 @@
                                 <span>{{ $submission->user->name }}</span>
                             </div>
                         </td>
+                        @endif
                         <td class="align-middle">{{ $submission->request_date->format('d/m/Y') }}</td>
                         <td class="align-middle">{{ $submission->expected_return_date->format('d/m/Y') }}</td>
+                        @if($isAdmin)
                         <td class="align-middle">
                             @if($submission->received_at)
                                 {{ $submission->received_at->format('d/m/Y') }}
@@ -85,6 +91,7 @@
                                 <span class="text-gray-400">-</span>
                             @endif
                         </td>
+                        @endif
                         <td class="align-middle">
                             @php
                                 $effectiveStatus = $submission->effective_status;
@@ -100,7 +107,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="{{ $isAdmin ? '6' : '4' }}">
                             <div class="py-10 text-center text-sm opacity-60">Nenhuma requisição encontrada para este livro.</div>
                         </td>
                     </tr>
@@ -115,6 +122,5 @@
         </div>
     @endif
 </div>
-@endif
 </div>
 
