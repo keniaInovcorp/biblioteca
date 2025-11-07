@@ -84,7 +84,22 @@ class SubmissionsTable extends Component
         }
 
         if ($this->statusFilter !== '') {
-            $query->where('submissions.status', $this->statusFilter);
+            if ($this->statusFilter === 'overdue') {
+                // Overdue OR created and past expected date
+                $query->where(function ($qq) {
+                    $qq->where('submissions.status', 'overdue')
+                       ->orWhere(function ($q2) {
+                           $q2->where('submissions.status', 'created')
+                              ->whereDate('submissions.expected_return_date', '<', now()->startOfDay());
+                       });
+                });
+            } elseif ($this->statusFilter === 'created') {
+                // created and NOT past expected date
+                $query->where('submissions.status', 'created')
+                      ->whereDate('submissions.expected_return_date', '>=', now()->startOfDay());
+            } else {
+                $query->where('submissions.status', $this->statusFilter);
+            }
         }
 
         // Handle sorting

@@ -29,10 +29,6 @@
                             <div class="font-medium">{{ $book?->name }}</div>
                         </div>
                         <div>
-                            <div class="text-sm text-gray-500">{{ __('Cidadão') }}</div>
-                            <div class="font-medium">{{ $user?->name }}</div>
-                        </div>
-                        <div>
                             <div class="text-sm text-gray-500">{{ __('Data da requisição') }}</div>
                             <div class="font-medium">{{ $submission->request_date?->format('d/m/Y') }}</div>
                         </div>
@@ -50,16 +46,30 @@
                             <div class="text-sm text-gray-500">{{ __('Estado') }}</div>
                             <div>
                                 @php
+                                    $isAdmin = auth()->user()?->hasRole('admin');
                                     $statusColors = [
                                         'created' => 'badge-info',
                                         'approved' => 'badge-primary',
                                         'rejected' => 'badge-warning',
                                         'returned' => 'badge-success',
                                     ];
+                                    $statusLabels = [
+                                        'created' => 'Criada',
+                                        'approved' => 'Aprovada',
+                                        'rejected' => 'Rejeitada',
+                                        'returned' => 'Devolvida',
+                                    ];
+
+                                    if ($isAdmin) {
+                                        $label = $statusLabels[$submission->status] ?? ucfirst($submission->status);
+                                        $class = $statusColors[$submission->status] ?? 'badge-ghost';
+                                    } else {
+                                        $isReturned = $submission->status === 'returned';
+                                        $label = $isReturned ? $statusLabels['returned'] : $statusLabels['created'];
+                                        $class = $isReturned ? $statusColors['returned'] : $statusColors['created'];
+                                    }
                                 @endphp
-                                <span class="badge {{ $statusColors[$submission->status] ?? 'badge-ghost' }}">
-                                    {{ ucfirst(__($submission->status)) }}
-                                </span>
+                                <span class="badge {{ $class }}">{{ $label }}</span>
                             </div>
                         </div>
                     </div>
@@ -72,5 +82,3 @@
         </div>
     </div>
 </x-app-layout>
-
-
