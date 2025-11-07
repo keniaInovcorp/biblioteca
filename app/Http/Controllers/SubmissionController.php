@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SubmissionCreated;
 use App\Http\Requests\SubmissionRequest;
 use App\Models\Book;
 use App\Models\Submission;
@@ -57,7 +58,7 @@ class SubmissionController extends Controller
         }
 
         // Create request
-        Submission::create([
+        $submission = Submission::create([
             'request_number' => Submission::generateRequestNumber(),
             'user_id' => $user->id,
             'book_id' => $book->id,
@@ -76,7 +77,10 @@ class SubmissionController extends Controller
      */
     public function show(Submission $submission)
     {
-        //
+
+        return view('submissions.show', [
+            'submission' => $submission->loadMissing(['book', 'user']),
+        ]);
     }
 
     /**

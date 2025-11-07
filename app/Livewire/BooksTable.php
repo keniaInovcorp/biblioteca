@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Events\SubmissionCreated;
 use App\Models\Book;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
@@ -68,7 +69,7 @@ class BooksTable extends Component
         }
 
         // Create submission
-        Submission::create([
+        $submission = Submission::create([
             'request_number' => Submission::generateRequestNumber(),
             'user_id' => $user->id,
             'book_id' => $book->id,
