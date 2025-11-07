@@ -12,6 +12,7 @@ use App\Models\Submission;
 use App\Observers\SubmissionObserver;
 use App\Policies\AdminPolicy;
 use App\Policies\SubmissionPolicy;
+use Illuminate\Console\Scheduling\Schedule;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,5 +49,10 @@ class AppServiceProvider extends ServiceProvider
         );
 
         Submission::observe(SubmissionObserver::class);
+
+        // Schedule send return reminders daily at 13:00
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('reminders:due-returns')->dailyAt('12:38');
+        });
     }
 }

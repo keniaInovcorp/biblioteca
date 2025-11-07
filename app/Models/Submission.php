@@ -18,6 +18,7 @@ class Submission extends Model
         'request_date',
         'expected_return_date',
         'received_at',
+        'reminder_sent_at',
         'days_elapsed',
         'status',
         'notes',
@@ -27,6 +28,7 @@ class Submission extends Model
         'request_date' => 'date',
         'expected_return_date' => 'date',
         'received_at' => 'date',
+        'reminder_sent_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
