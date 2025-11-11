@@ -9,6 +9,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class GoogleBooksService
@@ -34,13 +35,28 @@ class GoogleBooksService
             $params['key'] = $this->apiKey;
         }
         $cacheKey = 'gb:search:' . md5(json_encode($params));
+        if (Cache::has($cacheKey)) {
+            Log::info('gb.search.cache_hit', ['q' => $params['q']]);
+        }
         return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($params) {
+            $start = microtime(true);
             $response = Http::timeout(10)
                 ->retry(3, 200)
                 ->get("{$this->baseUrl}/volumes", $params);
+            $durationMs = (int) ((microtime(true) - $start) * 1000);
             if (!$response->ok()) {
+                Log::warning('gb.search.failed', [
+                    'q' => $params['q'],
+                    'status' => $response->status(),
+                    'duration_ms' => $durationMs,
+                ]);
                 return [];
             }
+            Log::info('gb.search.cache_miss', [
+                'q' => $params['q'],
+                'status' => $response->status(),
+                'duration_ms' => $durationMs,
+            ]);
             return Arr::get($response->json(), 'items', []);
         });
     }
@@ -54,11 +70,29 @@ class GoogleBooksService
             $params['key'] = $this->apiKey;
         }
         $cacheKey = "gb:volume:{$volumeId}:" . md5(json_encode($params));
+        if (Cache::has($cacheKey)) {
+            Log::info('gb.volume.cache_hit', ['id' => $volumeId]);
+        }
         return Cache::remember($cacheKey, now()->addMinutes(30), function () use ($volumeId, $params) {
+            $start = microtime(true);
             $response = Http::timeout(10)
                 ->retry(3, 200)
                 ->get("{$this->baseUrl}/volumes/{$volumeId}", $params);
-            return $response->ok() ? $response->json() : null;
+            $durationMs = (int) ((microtime(true) - $start) * 1000);
+            if (!$response->ok()) {
+                Log::warning('gb.volume.failed', [
+                    'id' => $volumeId,
+                    'status' => $response->status(),
+                    'duration_ms' => $durationMs,
+                ]);
+                return null;
+            }
+            Log::info('gb.volume.cache_miss', [
+                'id' => $volumeId,
+                'status' => $response->status(),
+                'duration_ms' => $durationMs,
+            ]);
+            return $response->json();
         });
     }
 
@@ -171,6 +205,7 @@ class GoogleBooksService
     protected function downloadCover(string $url, string $isbn): ?string
     {
         try {
+            $start = microtime(true);
             $response = Http::timeout(10)
                 ->retry(2, 200)
                 ->get($url);
@@ -178,8 +213,18 @@ class GoogleBooksService
             $extension = str_contains((string) $response->header('Content-Type'), 'png') ? 'png' : 'jpg';
             $filename = 'books/covers/' . $isbn . '.' . $extension;
             Storage::disk('public')->put($filename, $response->body());
+            Log::info('gb.cover.saved', [
+                'isbn' => $isbn,
+                'bytes' => strlen($response->body() ?? ''),
+                'duration_ms' => (int) ((microtime(true) - $start) * 1000),
+            ]);
             return $filename;
         } catch (\Throwable $e) {
+            Log::error('gb.cover.error', [
+                'isbn' => $isbn,
+                'url' => $url,
+                'error' => $e->getMessage(),
+            ]);
             return null;
         }
     }
