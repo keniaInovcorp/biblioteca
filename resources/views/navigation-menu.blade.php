@@ -32,6 +32,10 @@
                         {{ __('Requisições') }}
                     </x-nav-link>
 
+                    <x-nav-link href="{{ route('google-books.page') }}" :active="request()->routeIs('google-books.*')">
+                        {{ __('Google Books') }}
+                    </x-nav-link>
+
                     @can('viewAny', App\Models\User::class)
                     <x-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
                         {{ __('Administradores') }}
@@ -182,6 +186,14 @@
 
             <x-responsive-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
                 {{ __('Livros') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
+                {{ __('Requisições') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('google-books.page') }}" :active="request()->routeIs('google-books.*')">
+                {{ __('Google Books') }}
             </x-responsive-nav-link>
 
         </div>

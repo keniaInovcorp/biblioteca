@@ -36,6 +36,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('submissions', SubmissionController::class);
 
     // Google Books - protegidas por auth e com rate limit
+    Route::get('google-books', \App\Livewire\GoogleBooksSearch::class)
+        ->middleware(['throttle:20,1', 'can:create,' . Book::class])
+        ->name('google-books.page');
+
     Route::get('google-books/search', [GoogleBooksController::class, 'search'])
         ->middleware('throttle:20,1')
         ->name('google-books.search');

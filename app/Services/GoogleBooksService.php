@@ -23,22 +23,26 @@ class GoogleBooksService
         $this->apiKey = config('services.google_books.key');
     }
 
-    public function search(string $query, int $maxResults = 20): array
+    public function search(string $query, int $maxResults = 20, int $startIndex = 0): array
     {
+        $parsedQuery = $this->parseQuery($query);
         $params = [
-            'q' => $query,
+            'q' => $this->buildApiQuery($parsedQuery),
             'maxResults' => max(1, min($maxResults, 40)),
             'projection' => 'full',
             'printType' => 'books',
+            'startIndex' => max(0, $startIndex),
         ];
         if (!empty($this->apiKey)) {
             $params['key'] = $this->apiKey;
         }
-        $cacheKey = 'gb:search:' . md5(json_encode($params));
+        $cacheKey = 'gb:search:' . md5($query . ':' . json_encode($params));
         if (Cache::has($cacheKey)) {
             Log::info('gb.search.cache_hit', ['q' => $params['q']]);
+            return Cache::get($cacheKey, []);
         }
-        return Cache::remember($cacheKey, now()->addMinutes(15), function () use ($params) {
+
+        try {
             $start = microtime(true);
             $response = Http::timeout(10)
                 ->retry(3, 200)
@@ -52,13 +56,96 @@ class GoogleBooksService
                 ]);
                 return [];
             }
+            $items = Arr::get($response->json(), 'items', []);
+            Cache::put($cacheKey, $items, now()->addMinutes(15));
             Log::info('gb.search.cache_miss', [
                 'q' => $params['q'],
                 'status' => $response->status(),
                 'duration_ms' => $durationMs,
             ]);
-            return Arr::get($response->json(), 'items', []);
-        });
+            return $this->filterItems($items, $parsedQuery);
+        } catch (\Throwable $e) {
+            Log::error('gb.search.exception', [
+                'q' => $params['q'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
+    public function searchWithTotal(string $query, int $maxResults = 20, int $startIndex = 0): array
+    {
+        $parsedQuery = $this->parseQuery($query);
+        $apiQuery = $this->buildApiQuery($parsedQuery);
+        
+        Log::info('gb.search.parsed', [
+            'user_query' => $query,
+            'parsed' => $parsedQuery,
+            'api_query' => $apiQuery,
+        ]);
+        
+        $params = [
+            'q' => $apiQuery,
+            'maxResults' => max(1, min($maxResults, 40)),
+            'projection' => 'full',
+            'printType' => 'books',
+            'startIndex' => max(0, $startIndex),
+        ];
+        if (!empty($this->apiKey)) {
+            $params['key'] = $this->apiKey;
+        }
+        $cacheKey = 'gb:search-total:' . md5($query . ':' . json_encode($params));
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey, ['items' => [], 'total' => 0]);
+        }
+
+        try {
+            $response = Http::timeout(10)
+                ->retry(3, 200)
+                ->get("{$this->baseUrl}/volumes", $params);
+            if (!$response->ok()) {
+                Log::warning('gb.search_total.not_ok', [
+                    'status' => $response->status(),
+                    'api_query' => $apiQuery,
+                ]);
+                return ['items' => [], 'total' => 0];
+            }
+            $json = $response->json();
+            $totalItems = (int) Arr::get($json, 'totalItems', 0);
+            $rawItems = Arr::get($json, 'items', []);
+            
+            Log::info('gb.search_total.api_response', [
+                'total_items' => $totalItems,
+                'raw_count' => count($rawItems),
+            ]);
+            
+            if ($totalItems > 1000) {
+                $totalItems = 1000;
+            }
+            $items = $this->filterItems($rawItems, $parsedQuery);
+            $filteredCount = count($items);
+            
+            Log::info('gb.search_total.after_filter', [
+                'filtered_count' => $filteredCount,
+            ]);
+            
+            $cappedTotal = min($totalItems, 1000);
+            if ($filteredCount < count($rawItems) && $startIndex === 0) {
+                $cappedTotal = min($cappedTotal, max($filteredCount, $filteredCount + ($totalItems - count($rawItems))));
+            }
+            $payload = [
+                'items' => $items,
+                'total' => $cappedTotal,
+            ];
+            Cache::put($cacheKey, $payload, now()->addMinutes(10));
+            return $payload;
+        } catch (\Throwable $e) {
+            Log::error('gb.search_total.exception', [
+                'q' => $apiQuery,
+                'error' => $e->getMessage(),
+            ]);
+            return ['items' => [], 'total' => 0];
+        }
     }
 
     public function fetchVolumeById(string $volumeId): ?array
@@ -227,5 +314,187 @@ class GoogleBooksService
             ]);
             return null;
         }
+    }
+
+    protected function parseQuery(string $raw): array
+    {
+        $raw = trim($raw);
+        $data = [
+            'raw' => $raw,
+            'titles' => [],
+            'authors' => [],
+            'isbns' => [],
+            'publishers' => [],
+            'keywords' => [],
+        ];
+
+        if ($raw === '') {
+            return $data;
+        }
+
+        $mappings = [
+            'title' => 'titles',
+            'titulo' => 'titles',
+            'autor' => 'authors',
+            'author' => 'authors',
+            'isbn' => 'isbns',
+            'isn' => 'isbns',
+            'publisher' => 'publishers',
+            'editora' => 'publishers',
+        ];
+
+        $remaining = $raw;
+        foreach ($mappings as $alias => $bucket) {
+            $pattern = sprintf('/%s\s*:\s*("[^"]+"|[^\s]+)/iu', preg_quote($alias, '/'));
+            $remaining = preg_replace_callback($pattern, function ($matches) use (&$data, $bucket, $alias) {
+                $value = trim($matches[1] ?? '');
+                $value = trim($value, '"');
+                
+                if ($value === '') {
+                    return ' ';
+                }
+                if ($bucket === 'isbns') {
+                    $digits = preg_replace('/[^0-9Xx]/', '', $value);
+                    Log::info('gb.parse.isbn_attempt', [
+                        'raw_value' => $value,
+                        'digits' => $digits,
+                        'length' => strlen($digits),
+                    ]);
+                    if ($digits !== '' && (strlen($digits) === 10 || strlen($digits) === 13)) {
+                        $data['isbns'][] = Str::upper($digits);
+                    }
+                } else {
+                    $data[$bucket][] = $value;
+                }
+                return ' ';
+            }, $remaining);
+        }
+
+        $remaining = trim(preg_replace('/\s+/', ' ', $remaining));
+        if ($remaining !== '') {
+            $tokens = preg_split('/\s+/', $remaining);
+            
+            foreach ($tokens as $token) {
+                $token = trim($token);
+                if ($token === '') continue;
+                
+                $digits = preg_replace('/[^0-9Xx]/', '', $token);
+                if (strlen($digits) === 10 || strlen($digits) === 13) {
+                    Log::info('gb.parse.auto_isbn', [
+                        'token' => $token,
+                        'digits' => $digits,
+                    ]);
+                    $data['isbns'][] = Str::upper($digits);
+                } else {
+                    $data['keywords'][] = $token;
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    protected function buildApiQuery(array $parsed): string
+    {
+        $allTerms = [];
+        
+        foreach ($parsed['titles'] as $title) {
+            $allTerms[] = sprintf('intitle:"%s"', addcslashes($title, '"'));
+        }
+        
+        foreach ($parsed['authors'] as $author) {
+            $allTerms[] = sprintf('inauthor:"%s"', addcslashes($author, '"'));
+        }
+        
+        foreach ($parsed['publishers'] as $publisher) {
+            $allTerms[] = sprintf('inpublisher:"%s"', addcslashes($publisher, '"'));
+        }
+        
+        foreach ($parsed['isbns'] as $isbn) {
+            $allTerms[] = sprintf('isbn:%s', $isbn);
+        }
+        
+        foreach ($parsed['keywords'] as $keyword) {
+            $escaped = addcslashes($keyword, '"');
+            $allTerms[] = sprintf('intitle:"%s"', $escaped);
+            $allTerms[] = sprintf('inauthor:"%s"', $escaped);
+            if (preg_match('/\d+/', $keyword)) {
+                $allTerms[] = sprintf('isbn:%s', $keyword);
+            }
+        }
+
+        if (empty($allTerms)) {
+            return '""';
+        }
+
+        if (count($allTerms) === 1) {
+            return $allTerms[0];
+        }
+
+        return '(' . implode('+OR+', $allTerms) . ')';
+    }
+
+    protected function filterItems(array $items, array $parsed): array
+    {
+        if (empty($parsed['titles']) && empty($parsed['authors']) && empty($parsed['isbns'])) {
+            return $items;
+        }
+        
+        if (!empty($parsed['isbns'])) {
+            return $items;
+        }
+        
+        $titleFilters = array_map(fn ($v) => Str::lower($v), $parsed['titles']);
+        $authorFilters = array_map(fn ($v) => Str::lower($v), $parsed['authors']);
+
+        return collect($items)->filter(function ($item) use ($titleFilters, $authorFilters) {
+            $info = Arr::get($item, 'volumeInfo', []);
+            $title = Str::lower((string) Arr::get($info, 'title', ''));
+            $authors = collect(Arr::get($info, 'authors', []))
+                ->filter()
+                ->map(fn ($name) => Str::lower((string) $name));
+
+            foreach ($titleFilters as $filter) {
+                if ($filter !== '' && !Str::contains($title, $filter)) {
+                    return false;
+                }
+            }
+
+            foreach ($authorFilters as $filter) {
+                if ($filter === '') {
+                    continue;
+                }
+                $match = $authors->contains(fn ($name) => Str::contains($name, $filter));
+                if (!$match) {
+                    return false;
+                }
+            }
+
+            return true;
+        })->values()->all();
+    }
+
+    protected function volumeIsbns(array $volumeInfo): array
+    {
+        $identifiers = Arr::get($volumeInfo, 'industryIdentifiers', []);
+        if (!is_array($identifiers)) {
+            return [];
+        }
+        return collect($identifiers)
+            ->map(function ($identifier) {
+                $value = $identifier['identifier'] ?? null;
+                if (!$value) {
+                    return null;
+                }
+                $digits = preg_replace('/[^0-9Xx]/', '', (string) $value);
+                if ($digits === '' || (strlen($digits) !== 10 && strlen($digits) !== 13)) {
+                    return null;
+                }
+                return Str::upper($digits);
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }
