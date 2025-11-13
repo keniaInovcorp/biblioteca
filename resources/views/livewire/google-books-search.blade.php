@@ -3,7 +3,7 @@
         <div class="card-body">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="card-title">Google Books</h2>
-                <button class="btn btn-outline btn-sm" wire:click="toggleAdvanced">
+                <a href="#" class="btn btn-active btn-accent btn-sm gap-2" wire:click.prevent="toggleAdvanced">
                     @if($showAdvanced)
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -15,7 +15,7 @@
                         </svg>
                         Pesquisa Avançada
                     @endif
-                </button>
+                </a>
             </div>
             
             @if(!$showAdvanced)
@@ -55,6 +55,20 @@
         </div>
     </div>
 
+    @if(session()->has('success'))
+        <div class="alert alert-success">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session()->has('error'))
+        <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
     @if(!$hasSearch)
         <div class="alert alert-info">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -62,6 +76,23 @@
         </div>
     @else
         <div class="card bg-base-100 shadow">
+            <div class="card-body pb-0">
+                <div class="flex justify-end">
+                    <a 
+                        href="#"
+                        wire:click.prevent="importAll" 
+                        wire:loading.attr="disabled"
+                        wire:target="importAll"
+                        class="btn btn-active btn-accent btn-sm gap-2"
+                        title="Importar todos os livros da pesquisa">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" wire:loading.remove wire:target="importAll">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span class="loading loading-spinner loading-xs" wire:loading wire:target="importAll"></span>
+                        <span class="ml-1">Importar Todos</span>
+                    </a>
+                </div>
+            </div>
             <div class="overflow-x-auto">
                 <table class="table">
                     <thead>
@@ -124,12 +155,14 @@
                                 </button>
                             </th>
                             <th class="text-center">ISBN</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($books as $item)
                             @php
                                 $info = $item['volumeInfo'] ?? [];
+                                $volumeId = $item['id'] ?? null;
                                 $title = $info['title'] ?? 'Sem título';
                                 $authors = isset($info['authors']) ? implode(', ', $info['authors']) : '—';
                                 $publisher = $info['publisher'] ?? '—';
@@ -166,10 +199,40 @@
                                 <td class="max-w-xs"><span class="text-sm">{{ $publisher }}</span></td>
                                 <td><span class="badge badge-ghost">{{ $year }}</span></td>
                                 <td class="text-center"><span class="text-xs font-mono">{{ $isbn }}</span></td>
+                                <td class="text-center">
+                                    @if($volumeId)
+                                        @php
+                                            $isImported = in_array($isbn, $importedIsbns);
+                                        @endphp
+                                        
+                                        @if($isImported)
+                                            <span 
+                                                class="btn btn-active btn-accent btn-sm btn-disabled gap-2"
+                                                title="Livro já importado">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </span>
+                                        @else
+                                            <a 
+                                                href="#"
+                                                wire:click.prevent="importBook('{{ $volumeId }}')" 
+                                                wire:loading.attr="disabled"
+                                                wire:target="importBook('{{ $volumeId }}')"
+                                                class="btn btn-active btn-accent btn-sm gap-2"
+                                                title="Importar para biblioteca">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" wire:loading.remove wire:target="importBook('{{ $volumeId }}')">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                <span class="loading loading-spinner loading-xs" wire:loading wire:target="importBook('{{ $volumeId }}')"></span>
+                                            </a>
+                                        @endif
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-8 text-gray-500">Nenhum resultado encontrado.</td>
+                                <td colspan="7" class="text-center py-8 text-gray-500">Nenhum resultado encontrado.</td>
                             </tr>
                         @endforelse
                     </tbody>
