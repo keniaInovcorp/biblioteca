@@ -16,13 +16,15 @@
                          {{ __('Dashboard') }}
                     </x-nav-link>
 
-                    <x-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
-                        {{ __('Editoras') }}
-                    </x-nav-link>
+                    @can('create', App\Models\Book::class)
+                        <x-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
+                            {{ __('Editoras') }}
+                        </x-nav-link>
 
-                    <x-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
-                        {{ __('Autores') }}
-                    </x-nav-link>
+                        <x-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
+                            {{ __('Autores') }}
+                        </x-nav-link>
+                    @endcan
 
                     <x-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
                         {{ __('Livros') }}
@@ -30,10 +32,6 @@
 
                     <x-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
                         {{ __('Requisições') }}
-                    </x-nav-link>
-
-                    <x-nav-link href="{{ route('google-books.page') }}" :active="request()->routeIs('google-books.*')">
-                        {{ __('Google Books') }}
                     </x-nav-link>
 
                     @can('viewAny', App\Models\User::class)
@@ -176,13 +174,15 @@
             </x-responsive-nav-link>
             @endcan
 
-            <x-responsive-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
-                {{ __('Editoras') }}
-            </x-responsive-nav-link>
+            @can('create', App\Models\Book::class)
+                <x-responsive-nav-link href="{{ route('publishers.index') }}" :active="request()->routeIs('publishers.*')">
+                    {{ __('Editoras') }}
+                </x-responsive-nav-link>
 
-            <x-responsive-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
-                {{ __('Autores') }}
-            </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('authors.index') }}" :active="request()->routeIs('authors.*')">
+                    {{ __('Autores') }}
+                </x-responsive-nav-link>
+            @endcan
 
             <x-responsive-nav-link href="{{ route('books.index') }}" :active="request()->routeIs('books.*')">
                 {{ __('Livros') }}
@@ -190,10 +190,6 @@
 
             <x-responsive-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
                 {{ __('Requisições') }}
-            </x-responsive-nav-link>
-
-            <x-responsive-nav-link href="{{ route('google-books.page') }}" :active="request()->routeIs('google-books.*')">
-                {{ __('Google Books') }}
             </x-responsive-nav-link>
 
         </div>
