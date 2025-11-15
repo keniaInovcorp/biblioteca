@@ -77,13 +77,13 @@ class GoogleBooksService
     {
         $parsedQuery = $this->parseQuery($query);
         $apiQuery = $this->buildApiQuery($parsedQuery);
-        
+
         Log::info('gb.search.parsed', [
             'user_query' => $query,
             'parsed' => $parsedQuery,
             'api_query' => $apiQuery,
         ]);
-        
+
         $params = [
             'q' => $apiQuery,
             'maxResults' => max(1, min($maxResults, 40)),
@@ -113,22 +113,22 @@ class GoogleBooksService
             $json = $response->json();
             $totalItems = (int) Arr::get($json, 'totalItems', 0);
             $rawItems = Arr::get($json, 'items', []);
-            
+
             Log::info('gb.search_total.api_response', [
                 'total_items' => $totalItems,
                 'raw_count' => count($rawItems),
             ]);
-            
+
             if ($totalItems > 1000) {
                 $totalItems = 1000;
             }
             $items = $this->filterItems($rawItems, $parsedQuery);
             $filteredCount = count($items);
-            
+
             Log::info('gb.search_total.after_filter', [
                 'filtered_count' => $filteredCount,
             ]);
-            
+
             $cappedTotal = min($totalItems, 1000);
             if ($filteredCount < count($rawItems) && $startIndex === 0) {
                 $cappedTotal = min($cappedTotal, max($filteredCount, $filteredCount + ($totalItems - count($rawItems))));
@@ -227,6 +227,8 @@ class GoogleBooksService
         $imageUrl = $this->bestImageUrl($volumeInfo);
         $coverPath = $imageUrl ? $this->downloadCover($imageUrl, $isbn) : null;
 
+        $price = $this->extractPrice($volume);
+
         $book = Book::firstOrNew(['isbn' => $isbn]);
         $book->name = $title;
         $book->publisher_id = $publisher->id;
@@ -236,6 +238,9 @@ class GoogleBooksService
         }
         if ($coverPath && empty($book->cover_image_path)) {
             $book->cover_image_path = $coverPath;
+        }
+        if ($price !== null && (empty($book->price) || $book->price == 0)) {
+            $book->price = $price;
         }
         $book->save();
 
@@ -255,6 +260,42 @@ class GoogleBooksService
         if (!$value) return null;
         $clean = preg_replace('/[^0-9Xx]/', '', (string) $value);
         return $clean ?: null;
+    }
+
+    protected function extractPrice(array $volume): ?float
+    {
+        $saleInfo = Arr::get($volume, 'saleInfo', []);
+        if (!is_array($saleInfo) || empty($saleInfo)) {
+            return null;
+        }
+
+        // Verificar se o livro está à venda
+        $saleability = Arr::get($saleInfo, 'saleability', '');
+        if ($saleability !== 'FOR_SALE') {
+            return null;
+        }
+
+        // Priorizar retailPrice depois listPrice
+        $retailPrice = Arr::get($saleInfo, 'retailPrice', []);
+        $listPrice = Arr::get($saleInfo, 'listPrice', []);
+
+        $priceData = !empty($retailPrice) ? $retailPrice : $listPrice;
+
+        if (empty($priceData) || !is_array($priceData)) {
+            return null;
+        }
+
+        $amount = Arr::get($priceData, 'amount');
+        if ($amount === null || $amount === '') {
+            return null;
+        }
+
+        $price = (float) $amount;
+        if ($price <= 0 || $price > 999999.99) {
+            return null;
+        }
+
+        return round($price, 2);
     }
 
     protected function firstOrCreatePublisher(string $name): Publisher
@@ -349,7 +390,7 @@ class GoogleBooksService
             $remaining = preg_replace_callback($pattern, function ($matches) use (&$data, $bucket, $alias) {
                 $value = trim($matches[1] ?? '');
                 $value = trim($value, '"');
-                
+
                 if ($value === '') {
                     return ' ';
                 }
@@ -373,11 +414,11 @@ class GoogleBooksService
         $remaining = trim(preg_replace('/\s+/', ' ', $remaining));
         if ($remaining !== '') {
             $tokens = preg_split('/\s+/', $remaining);
-            
+
             foreach ($tokens as $token) {
                 $token = trim($token);
                 if ($token === '') continue;
-                
+
                 $digits = preg_replace('/[^0-9Xx]/', '', $token);
                 if (strlen($digits) === 10 || strlen($digits) === 13) {
                     Log::info('gb.parse.auto_isbn', [
@@ -397,23 +438,23 @@ class GoogleBooksService
     protected function buildApiQuery(array $parsed): string
     {
         $allTerms = [];
-        
+
         foreach ($parsed['titles'] as $title) {
             $allTerms[] = sprintf('intitle:"%s"', addcslashes($title, '"'));
         }
-        
+
         foreach ($parsed['authors'] as $author) {
             $allTerms[] = sprintf('inauthor:"%s"', addcslashes($author, '"'));
         }
-        
+
         foreach ($parsed['publishers'] as $publisher) {
             $allTerms[] = sprintf('inpublisher:"%s"', addcslashes($publisher, '"'));
         }
-        
+
         foreach ($parsed['isbns'] as $isbn) {
             $allTerms[] = sprintf('isbn:%s', $isbn);
         }
-        
+
         foreach ($parsed['keywords'] as $keyword) {
             $escaped = addcslashes($keyword, '"');
             $allTerms[] = sprintf('intitle:"%s"', $escaped);
@@ -439,11 +480,11 @@ class GoogleBooksService
         if (empty($parsed['titles']) && empty($parsed['authors']) && empty($parsed['isbns'])) {
             return $items;
         }
-        
+
         if (!empty($parsed['isbns'])) {
             return $items;
         }
-        
+
         $titleFilters = array_map(fn ($v) => Str::lower($v), $parsed['titles']);
         $authorFilters = array_map(fn ($v) => Str::lower($v), $parsed['authors']);
 
