@@ -17,7 +17,7 @@
                     @endif
                 </a>
             </div>
-            
+
             @if(!$showAdvanced)
                 <label class="input input-bordered input-lg flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 opacity-70">
@@ -78,9 +78,9 @@
         <div class="card bg-base-100 shadow">
             <div class="card-body pb-0">
                 <div class="flex justify-end">
-                    <a 
+                    <a
                         href="#"
-                        wire:click.prevent="importAll" 
+                        wire:click.prevent="importAll"
                         wire:loading.attr="disabled"
                         wire:target="importAll"
                         class="btn btn-active btn-accent btn-sm gap-2"
@@ -169,9 +169,12 @@
                                 $year = isset($info['publishedDate']) ? substr($info['publishedDate'], 0, 4) : '—';
                                 $img = $info['imageLinks']['thumbnail'] ?? $info['imageLinks']['smallThumbnail'] ?? null;
                                 $identifiers = $info['industryIdentifiers'] ?? [];
-                                $isbn = collect($identifiers)->where('type', 'ISBN_13')->first()['identifier'] 
-                                     ?? collect($identifiers)->where('type', 'ISBN_10')->first()['identifier'] 
-                                     ?? '—';
+                                $rawIsbn = collect($identifiers)->where('type', 'ISBN_13')->first()['identifier']
+                                         ?? collect($identifiers)->where('type', 'ISBN_10')->first()['identifier']
+                                         ?? null;
+                                // Normalizar ISBN para exibição e comparação
+                                $isbn = $rawIsbn ?: '—';
+                                $normalizedIsbn = $rawIsbn ? strtoupper(preg_replace('/[^0-9Xx]/', '', $rawIsbn)) : null;
                             @endphp
                             <tr class="hover">
                                 <td>
@@ -202,11 +205,11 @@
                                 <td class="text-center">
                                     @if($volumeId)
                                         @php
-                                            $isImported = in_array($isbn, $importedIsbns);
+                                            $isImported = $normalizedIsbn && in_array($normalizedIsbn, $importedIsbns);
                                         @endphp
-                                        
+
                                         @if($isImported)
-                                            <span 
+                                            <span
                                                 class="btn btn-active btn-accent btn-sm btn-disabled gap-2"
                                                 title="Livro já importado">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,9 +217,9 @@
                                                 </svg>
                                             </span>
                                         @else
-                                            <a 
+                                            <a
                                                 href="#"
-                                                wire:click.prevent="importBook('{{ $volumeId }}')" 
+                                                wire:click.prevent="importBook('{{ $volumeId }}')"
                                                 wire:loading.attr="disabled"
                                                 wire:target="importBook('{{ $volumeId }}')"
                                                 class="btn btn-active btn-accent btn-sm gap-2"

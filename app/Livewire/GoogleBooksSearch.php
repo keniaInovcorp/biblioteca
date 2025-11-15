@@ -95,6 +95,7 @@ class GoogleBooksSearch extends Component
 
             session()->flash('success', "Livro '{$book->name}' importado com sucesso!");
 
+
         } catch (\Exception $e) {
             session()->flash('error', 'Erro ao importar livro: ' . $e->getMessage());
         }
@@ -105,7 +106,7 @@ class GoogleBooksSearch extends Component
         try {
             $service = app(GoogleBooksService::class);
 
-            // Obter todos os resultados da pesquisa atual
+
             $query = '';
             $hasOnlyYear = false;
             if ($this->showAdvanced) {
@@ -291,6 +292,9 @@ class GoogleBooksSearch extends Component
             }
         }
 
+        // Filtrar apenas livros com ISBN
+        $allResults = $this->filterResultsWithIsbn($allResults);
+
         $total = count($allResults);
         $currentPageResults = collect($allResults)
             ->slice(($this->page - 1) * $this->perPage, $this->perPage)
@@ -315,6 +319,34 @@ class GoogleBooksSearch extends Component
         ]);
     }
 
+    protected function filterResultsWithIsbn(array $results): array
+    {
+        return collect($results)->filter(function ($item) {
+            return $this->hasIsbn($item);
+        })->values()->all();
+    }
+
+    protected function hasIsbn(array $item): bool
+    {
+        $identifiers = $item['volumeInfo']['industryIdentifiers'] ?? [];
+        if (!is_array($identifiers) || empty($identifiers)) {
+            return false;
+        }
+
+        foreach ($identifiers as $identifier) {
+            if (in_array($identifier['type'] ?? '', ['ISBN_13', 'ISBN_10'])) {
+                $isbn = $identifier['identifier'] ?? '';
+                // Verificar se o ISBN é válido, tem ter pelo menos 10 dígitos
+                $clean = preg_replace('/[^0-9Xx]/', '', (string) $isbn);
+                if (strlen($clean) >= 10) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     protected function getImportedIsbns(array $results): array
     {
         $isbns = [];
@@ -322,7 +354,12 @@ class GoogleBooksSearch extends Component
             $identifiers = $item['volumeInfo']['industryIdentifiers'] ?? [];
             foreach ($identifiers as $identifier) {
                 if (in_array($identifier['type'], ['ISBN_13', 'ISBN_10'])) {
-                    $isbns[] = $identifier['identifier'];
+                    $rawIsbn = $identifier['identifier'] ?? '';
+
+                    $normalized = preg_replace('/[^0-9Xx]/', '', (string) $rawIsbn);
+                    if ($normalized) {
+                        $isbns[] = strtoupper($normalized);
+                    }
                 }
             }
         }
@@ -331,9 +368,20 @@ class GoogleBooksSearch extends Component
             return [];
         }
 
-        return \App\Models\Book::whereIn('isbn', $isbns)
-            ->pluck('isbn')
+        // Buscar livros importados
+        $imported = \App\Models\Book::whereNotNull('isbn')
+            ->where('isbn', '!=', '')
+            ->get()
+            ->map(function($book) {
+                return strtoupper(preg_replace('/[^0-9Xx]/', '', (string) $book->isbn));
+            })
+            ->filter(function($normalized) use ($isbns) {
+                return in_array($normalized, $isbns);
+            })
+            ->values()
             ->toArray();
+
+        return array_unique($imported);
     }
 
     protected function sortResults(array $results): array
