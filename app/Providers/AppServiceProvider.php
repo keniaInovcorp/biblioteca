@@ -18,18 +18,6 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class AppServiceProvider extends ServiceProvider
 {
-
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
-    protected $policies = [
-        User::class => AdminPolicy::class,
-        Submission::class => SubmissionPolicy::class,
-        Review::class => ReviewPolicy::class,
-    ];
-
     /**
      * Register any application services.
      */
@@ -43,8 +31,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register policies
         Gate::policy(User::class, AdminPolicy::class);
         Gate::policy(Submission::class, SubmissionPolicy::class);
+        Gate::policy(Review::class, ReviewPolicy::class);
+
+        Gate::define('canReviewBook', function (User $user, $bookId) {
+            $policy = new ReviewPolicy();
+            return $policy->canReviewBook($user, $bookId);
+        });
 
         Event::listen(
             SubmissionCreated::class,
@@ -53,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
         Submission::observe(SubmissionObserver::class);
 
-        // Schedule send return reminders daily at 13:00
+        // Schedule send return reminders daily at 12:38
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('reminders:due-returns')->dailyAt('12:38');
         });

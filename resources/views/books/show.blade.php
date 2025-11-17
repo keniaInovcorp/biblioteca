@@ -34,6 +34,23 @@
       </div>
     </div>
 
+    <!-- Review Form - Show if user can review or has pending/rejected review -->
+    @auth
+      @php
+        $user = auth()->user();
+        $userReview = $user ? \App\Models\Review::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->first() : null;
+        $canReview = $user && $user->can('canReviewBook', $book->id);
+        $shouldShow = $canReview || ($userReview && ($userReview->isPending() || $userReview->isRejected()));
+      @endphp
+      @if($shouldShow)
+        <div class="mt-6">
+          <livewire:review-form :book="$book" />
+        </div>
+      @endif
+    @endauth
+
     <!-- Request History - Admin -->
     <livewire:book-submissions-table :book="$book" />
   </div>
