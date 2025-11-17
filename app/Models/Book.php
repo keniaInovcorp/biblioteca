@@ -53,4 +53,14 @@ class Book extends Model
     {
         return !$this->activeSubmissions()->exists();
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function activeReviews()
+    {
+        return $this->hasMany(Review::class)->where('status', 'active');
+    }
 }

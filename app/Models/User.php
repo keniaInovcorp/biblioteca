@@ -84,4 +84,9 @@ class User extends Authenticatable
         return $this->hasMany(Submission::class)
             ->whereIn('status', ['created', 'overdue']);
     }
+
+    public function reviews()
+    {
+    return $this->hasMany(Review::class);
+    }
 }
