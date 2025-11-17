@@ -9,9 +9,11 @@ use App\Events\SubmissionCreated;
 use App\Listeners\SendSubmissionCreatedNotifications;
 use App\Models\User;
 use App\Models\Submission;
+use App\Models\Review;
 use App\Observers\SubmissionObserver;
 use App\Policies\AdminPolicy;
 use App\Policies\SubmissionPolicy;
+use App\Policies\ReviewPolicy;
 use Illuminate\Console\Scheduling\Schedule;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => AdminPolicy::class,
         Submission::class => SubmissionPolicy::class,
+        Review::class => ReviewPolicy::class,
     ];
 
     /**
