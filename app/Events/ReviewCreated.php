@@ -3,15 +3,18 @@
 namespace App\Events;
 
 use App\Models\Review;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class ReviewCreated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public Review $review)
+    public Review $review;
+
+    public function __construct(Review $review)
     {
-        $this->review->loadMissing(['book', 'user']);
+        $this->review = $review->loadMissing(['user', 'book']);
     }
 }

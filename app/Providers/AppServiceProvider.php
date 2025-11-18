@@ -6,7 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Event;
 use App\Events\SubmissionCreated;
+use App\Events\ReviewCreated;
 use App\Listeners\SendSubmissionCreatedNotifications;
+use App\Listeners\SendReviewCreatedNotification;
 use App\Models\User;
 use App\Models\Submission;
 use App\Models\Review;
@@ -44,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             SubmissionCreated::class,
             SendSubmissionCreatedNotifications::class
+        );
+
+        Event::listen(
+            ReviewCreated::class,
+            SendReviewCreatedNotification::class
         );
 
         Submission::observe(SubmissionObserver::class);
