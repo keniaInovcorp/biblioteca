@@ -68,9 +68,21 @@ class ReviewPolicy
         return false;
     }
 
+    /**
+     * Determine whether the user can moderate any reviews.
+     */
+    public function moderateAny(User $user): bool
+    {
+        // Only admins can moderate reviews
+        return $user->can('create', \App\Models\Book::class);
+    }
+
+    /**
+     * Determine whether the user can moderate a specific review.
+     */
     public function moderate(User $user, Review $review): bool
     {
-        //Only admins moderated.
+        // Only admins can moderate reviews
         return $user->can('create', \App\Models\Book::class);
     }
 

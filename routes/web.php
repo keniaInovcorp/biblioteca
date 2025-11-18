@@ -7,6 +7,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\GoogleBooksController;
+use App\Http\Controllers\ReviewController;
 use App\Models\Book;
 use Illuminate\Support\Facades\Mail;
 
@@ -35,6 +36,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('submissions', SubmissionController::class);
 
+    // Reviews
+    Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+    Route::get('reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
+    Route::post('reviews/{review}/approve', [ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('reviews/{review}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
+
     // Google Books - protegidas por auth e com rate limit
     Route::get('google-books', \App\Livewire\GoogleBooksSearch::class)
         ->middleware(['throttle:20,1', 'can:create,' . Book::class])
@@ -55,4 +62,5 @@ Route::middleware(['auth'])->group(function () {
     Route::post('google-books/import-by-query', [GoogleBooksController::class, 'importByQuery'])
         ->middleware(['throttle:5,1', 'can:create,' . Book::class])
         ->name('google-books.import-by-query');
+
 });

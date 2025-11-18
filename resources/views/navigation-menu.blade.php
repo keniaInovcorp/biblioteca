@@ -34,6 +34,12 @@
                         {{ __('Requisições') }}
                     </x-nav-link>
 
+                    @can('create', App\Models\Book::class)
+                    <x-nav-link :href="route('reviews.index')" :active="request()->routeIs('reviews.*')">
+                        {{ __('Reviews') }}
+                    </x-nav-link>
+                    @endcan
+
                     @can('viewAny', App\Models\User::class)
                     <x-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
                         {{ __('Administradores') }}
@@ -191,6 +197,12 @@
             <x-responsive-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
                 {{ __('Requisições') }}
             </x-responsive-nav-link>
+
+            @can('create', App\Models\Book::class)
+                <x-responsive-nav-link :href="route('reviews.index')" :active="request()->routeIs('reviews.*')">
+                    {{ __('Reviews') }}
+                </x-responsive-nav-link>
+            @endcan
 
         </div>
 
