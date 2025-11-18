@@ -223,14 +223,11 @@
                                         </svg>
                                     </a>
                                     @if($isAdmin && $effectiveStatus !== 'returned')
-                                        <form action="{{ route('submissions.confirm-return', $submission) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-square btn-ghost btn-sm btn-success" aria-label="Confirmar Devolução" title="Confirmar Devolução">
-                                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                        <a href="#" class="btn btn-square btn-ghost btn-sm" wire:click.prevent="confirmReturn({{ $submission->id }})" aria-label="Confirmar Devolução" title="Confirmar Devolução">
+                                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                        </a>
                                     @endif
                                 </div>
                             </td>

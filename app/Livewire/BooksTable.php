@@ -149,9 +149,13 @@ class BooksTable extends Component
 
         $books = $query->paginate($this->perPage);
 
-        /** @var \App\Models\User $user */
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
-        $canRequestMore = $user ? $user->activeSubmissions()->count() < 3 : false;
+        $canRequestMore = false;
+        
+        if ($user && Gate::allows('create', Submission::class)) {
+            $canRequestMore = $user->activeSubmissions()->count() < 3;
+        }
 
         return view('livewire.books-table', [
             'books' => $books,

@@ -56,6 +56,38 @@ class SubmissionsTable extends Component
         $this->resetPage();
     }
 
+    public function confirmReturn(int $submissionId): void
+    {
+        $user = Auth::user();
+        /** @var \App\Models\User $user */
+        
+        // Only admin can confirm returns
+        if (!$user->hasRole('admin')) {
+            session()->flash('error', 'Apenas administradores podem confirmar devoluções.');
+            return;
+        }
+
+        $submission = Submission::findOrFail($submissionId);
+
+        // Can only return if not already returned
+        if ($submission->status === 'returned') {
+            session()->flash('error', 'Esta requisição já foi devolvida.');
+            return;
+        }
+
+        // Calculate days elapsed from request_date to now
+        $requestDate = $submission->request_date;
+        $daysElapsed = $requestDate->diffInDays(now()->startOfDay());
+
+        $submission->update([
+            'status' => 'returned',
+            'received_at' => now(),
+            'days_elapsed' => $daysElapsed,
+        ]);
+
+        session()->flash('success', 'Devolução confirmada com sucesso!');
+    }
+
     public function render()
     {
         $allowedSorts = ['request_number', 'request_date', 'expected_return_date', 'received_at', 'days_elapsed', 'status', 'book_id', 'book_name', 'user_name'];

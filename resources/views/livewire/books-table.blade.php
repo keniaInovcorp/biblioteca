@@ -131,15 +131,15 @@
                             <td class="align-middle">
                                 <div class="flex justify-end gap-1 pr-[60px]">
                                     @if($isAvailable && $canRequestMore)
-                                    <button type="button" 
-                                            class="btn btn-square btn-ghost btn-sm btn-primary" 
-                                            wire:click="requestBook({{ $book->id }})" 
-                                            aria-label="Requisitar" 
-                                            title="Requisitar livro">
+                                    <a href="#" 
+                                       class="btn btn-square btn-ghost btn-sm" 
+                                       wire:click.prevent="requestBook({{ $book->id }})" 
+                                       aria-label="Requisitar" 
+                                       title="Requisitar livro">
                                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                         </svg>
-                                    </button>
+                                    </a>
                                     @else
                                     <div class="w-10 h-10"></div>
                                     @endif

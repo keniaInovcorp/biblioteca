@@ -212,6 +212,15 @@ class GoogleBooksService
             }
         }
 
+        // Clean HTML tags from description
+        if ($description !== '') {
+            $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $description = strip_tags($description);
+            $description = trim($description);
+            // Multiple spaces/newlines
+            $description = preg_replace('/\s+/', ' ', $description);
+        }
+
         $isbn = $this->extractIsbn($volumeInfo);
         if (empty($isbn)) {
             return null;
