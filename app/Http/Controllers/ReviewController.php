@@ -81,7 +81,7 @@ class ReviewController extends Controller
         $review->update(['status' => 'active']);
 
         // Trigger event to notify citizen.
-        // event(new \App\Events\ReviewStatusChanged($review));
+        event(new \App\Events\ReviewStatusChanged($review));
 
         return redirect()->route('reviews.index')
             ->with('success', 'Review aprovada com sucesso!');
@@ -101,7 +101,7 @@ class ReviewController extends Controller
         ]);
 
 
-       // event(new \App\Events\ReviewStatusChanged($review));
+        event(new \App\Events\ReviewStatusChanged($review));
 
         return redirect()->route('reviews.index')
             ->with('success', 'Review rejeitada com sucesso!');
