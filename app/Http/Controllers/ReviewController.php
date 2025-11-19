@@ -16,11 +16,7 @@ class ReviewController extends Controller
     {
         $this->authorize('moderateAny', Review::class);
 
-        $reviews = Review::with(['user', 'book'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-        return view('reviews.index', compact('reviews'));
+        return view('reviews.index');
     }
 
     /**

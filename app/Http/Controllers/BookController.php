@@ -28,7 +28,7 @@ class BookController extends Controller
     public function create()
     {
         $this->authorize('create', Book::class);
-        
+
         $publishers = Publisher::orderBy('name')->get();
         $authors = Author::orderBy('name')->get();
         return view('books.create', compact('publishers', 'authors'));
@@ -65,7 +65,7 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        $book->load(['publisher', 'authors']);
+        $book->load(['publisher', 'authors', 'activeReviews.user']);
         return view('books.show', compact('book'));
     }
 
@@ -75,7 +75,7 @@ class BookController extends Controller
     public function edit(Book $book)
     {
         $this->authorize('update', $book);
-        
+
         $publishers = Publisher::orderBy('name')->get();
         $authors = Author::orderBy('name')->get();
         $book->load('authors');
@@ -127,7 +127,7 @@ class BookController extends Controller
     public function destroy(Book $book)
     {
         $this->authorize('delete', $book);
-        
+
         if ($book->cover_image_path && Storage::disk('public')->exists($book->cover_image_path)) {
             Storage::disk('public')->delete($book->cover_image_path);
         }
