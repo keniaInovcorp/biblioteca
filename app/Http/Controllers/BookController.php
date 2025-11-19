@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Exports\BooksExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Services\BookSimilarityService;
 
 class BookController extends Controller
 {
@@ -66,7 +67,11 @@ class BookController extends Controller
     public function show(Book $book)
     {
         $book->load(['publisher', 'authors', 'activeReviews.user']);
-        return view('books.show', compact('book'));
+
+        $similarityService = app(BookSimilarityService::class);
+        $relatedBooks = $similarityService->findRelatedBooks($book, 5);
+
+        return view('books.show', compact('book', 'relatedBooks'));
     }
 
     /**

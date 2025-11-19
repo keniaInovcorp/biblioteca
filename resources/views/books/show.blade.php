@@ -1,3 +1,7 @@
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 <x-app-layout>
   <x-slot name="header">
     <div class="flex items-center justify-between">
@@ -76,6 +80,45 @@
         @endauth
       </div>
     </div>
-  </div>
 
+    <!-- Livros Relacionados -->
+    @if($relatedBooks->isNotEmpty())
+      <div class="card bg-base-100 shadow mt-6">
+        <div class="card-body p-2">
+          <h2 class="card-title">Livros Relacionados</h2>
+
+          <div class="flex flex-nowrap gap-2 overflow-x-auto">
+            @foreach($relatedBooks as $relatedBook)
+              <div class="card bg-base-200 shadow-sm rounded-md flex-shrink-0" style="width: calc(20% - 8px);">
+                <div class="card-body p-2">
+                  @if($relatedBook->cover_image_path)
+                    <img
+                      src="{{ $relatedBook->cover_image_url }}"
+                      alt="{{ $relatedBook->name }}"
+                      class="w-full aspect-square object-contain rounded mb-2"
+                    />
+                  @else
+                    <div class="w-full aspect-square bg-base-300 rounded mb-2 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                  @endif
+                  <h3 class="font-semibold text-xs mb-1 line-clamp-2">{{ Str::limit($relatedBook->name, 30) }}</h3>
+                  <p class="text-xs text-gray-500 mb-2 line-clamp-1">{{ $relatedBook->publisher->name }}</p>
+                  <a
+                    href="{{ route('books.show', $relatedBook) }}"
+                    class="btn btn-xs btn-primary w-full"
+                  >
+                    Ver Detalhes
+                 </a>
+                </div>
+               </div>
+             @endforeach
+           </div>
+         </div>
+       </div>
+      @endif
+
+  </div>
 </x-app-layout>
