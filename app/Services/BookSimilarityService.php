@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Book;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class BookSimilarityService
@@ -20,38 +21,40 @@ class BookSimilarityService
      */
     public function findRelatedBooks(Book $book, int $limit = 5): \Illuminate\Support\Collection
     {
-        if (empty($book->bibliography)) {
-            return collect([]);
-        }
+        return Cache::remember("book.{$book->id}.related", now()->addHours(24), function () use ($book, $limit) {
+            if (empty($book->bibliography)) {
+                return collect([]);
+            }
 
-        $bookKeywords = $this->extractKeywords($book->bibliography);
+            $bookKeywords = $this->extractKeywords($book->bibliography);
 
-        if ($bookKeywords->isEmpty()) {
-            return collect([]);
-        }
+            if ($bookKeywords->isEmpty()) {
+                return collect([]);
+            }
 
-        // Search for all books except the current one.
-        $allBooks = Book::where('id', '!=', $book->id)
-            ->whereNotNull('bibliography')
-            ->where('bibliography', '!=', '')
-            ->get();
+            // Search for all books except the current one.
+            $allBooks = Book::where('id', '!=', $book->id)
+                ->whereNotNull('bibliography')
+                ->where('bibliography', '!=', '')
+                ->get();
 
-        // Calculate similarity for each book.
-        $similarities = $allBooks->map(function ($otherBook) use ($bookKeywords) {
-            $otherKeywords = $this->extractKeywords($otherBook->bibliography);
-            $similarity = $this->calculateSimilarity($bookKeywords, $otherKeywords);
+            // Calculate similarity for each book.
+            $similarities = $allBooks->map(function ($otherBook) use ($bookKeywords) {
+                $otherKeywords = $this->extractKeywords($otherBook->bibliography);
+                $similarity = $this->calculateSimilarity($bookKeywords, $otherKeywords);
 
-            return [
-                'book' => $otherBook,
-                'similarity' => $similarity,
-            ];
-        })
-        ->filter(fn($item) => $item['similarity'] > 0)
-        ->sortByDesc('similarity')
-        ->take($limit)
-        ->pluck('book');
+                return [
+                    'book' => $otherBook,
+                    'similarity' => $similarity,
+                ];
+            })
+            ->filter(fn($item) => $item['similarity'] > 0)
+            ->sortByDesc('similarity')
+            ->take($limit)
+            ->pluck('book');
 
-        return $similarities;
+            return $similarities;
+        });
     }
 
     /**
