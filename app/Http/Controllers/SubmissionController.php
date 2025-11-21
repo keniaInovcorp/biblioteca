@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Events\SubmissionCreated;
 use App\Http\Requests\SubmissionRequest;
 use App\Models\Book;
+use App\Models\BookAvailabilityAlert;
 use App\Models\Submission;
+use App\Notifications\BookAvailabilityNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -136,6 +138,23 @@ class SubmissionController extends Controller
             'received_at' => now(),
             'days_elapsed' => $daysElapsed,
         ]);
+
+        // Check if the book is available and send notifications.
+        $book = $submission->book;
+        if ($book->isAvailable()) {
+            // Find all active alerts for this book.
+            $alerts = BookAvailabilityAlert::where('book_id', $book->id)
+                ->where('notified', false)
+                ->with('user')
+                ->get();
+
+            // Send a notification to each user.
+            foreach ($alerts as $alert) {
+                $alert->user->notify(new BookAvailabilityNotification($book));
+                // Mark alert as notified.
+                $alert->markAsNotified();
+            }
+        }
 
         return back()->with('success', 'Devolução confirmada com sucesso!');
     }

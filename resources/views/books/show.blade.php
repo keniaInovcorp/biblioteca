@@ -41,45 +41,45 @@
     <!-- Request History - Admin -->
     <livewire:book-submissions-table :book="$book" />
 
-    <!-- Reviews Section -->
-    <div class="card bg-base-100 shadow mt-6">
-      <div class="card-body">
+  <!-- Reviews Section -->
+  <div class="card bg-base-100 shadow mt-6">
+    <div class="card-body">
         <h2 class="card-title">Avaliações ({{ $book->activeReviews->count() }})</h2>
 
         @forelse($book->activeReviews as $review)
-          <div class="border-b border-base-300 pb-4 mb-4 last:border-0 last:mb-0">
-            <div class="flex items-start justify-between mb-2">
-              <div>
-                <p class="font-semibold">{{ $review->user->name }}</p>
-                <p class="text-sm text-gray-500">{{ $review->created_at->format('d/m/Y') }}</p>
-              </div>
-              <div class="rating rating-sm">
-                @for($i = 1; $i <= 5; $i++)
-                  <input
-                    type="radio"
-                    class="mask mask-star-2 bg-orange-400"
-                    @if($i <= $review->rating) checked @endif
-                    disabled
-                  />
-                @endfor
-              </div>
+            <div class="border-b border-base-300 pb-4 mb-4 last:border-0 last:mb-0">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <p class="font-semibold">{{ $review->user->name }}</p>
+                        <p class="text-sm text-gray-500">{{ $review->created_at->format('d/m/Y') }}</p>
+                    </div>
+                    <div class="rating rating-sm">
+                        @for($i = 1; $i <= 5; $i++)
+                            <input
+                                type="radio"
+                                class="mask mask-star-2 bg-orange-400"
+                                @if($i <= $review->rating) checked @endif
+                                disabled
+                            />
+                        @endfor
+                    </div>
+                </div>
+                <p class="text-sm">{{ $review->comment }}</p>
             </div>
-            <p class="text-sm">{{ $review->comment }}</p>
-          </div>
         @empty
-          <p class="text-gray-500">Ainda não há avaliações para este livro.</p>
+            <p class="text-gray-500">Ainda não há avaliações para este livro.</p>
         @endforelse
 
         <!-- Formulário de Review  -->
         @auth
           @can('canReviewBook', $book->id)
-            <div class="mt-6 pt-6 border-t border-base-300">
-              <livewire:review-form :book="$book" />
-            </div>
-          @endcan
+                <div class="mt-6 pt-6 border-t border-base-300">
+                    <livewire:review-form :book="$book" />
+                </div>
+            @endcan
         @endauth
-      </div>
     </div>
+  </div>
 
     <!-- Livros Relacionados -->
     @if($relatedBooks->isNotEmpty())

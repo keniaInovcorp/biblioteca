@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Events\SubmissionCreated;
 use App\Models\Book;
+use App\Models\BookAvailabilityAlert;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -93,6 +94,59 @@ class BooksTable extends Component
         $this->resetPage();
     }
 
+    public function toggleAlert($bookId)
+    {
+        $this->successMessage = '';
+        $this->errorMessage = '';
+
+        if (!Auth::check()) {
+            $this->errorMessage = 'Você precisa estar autenticado para ativar alertas.';
+            return;
+        }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $book = Book::findOrFail($bookId);
+
+        // Check if the book is unavailable.
+        if ($book->isAvailable()) {
+            $this->errorMessage = 'Este livro já está disponível.';
+            return;
+        }
+
+        // Check if the user has an active request in this book.
+        $hasActiveSubmission = Submission::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->whereIn('status', ['created', 'overdue'])
+            ->exists();
+
+        if ($hasActiveSubmission) {
+            $this->errorMessage = 'Você não pode ativar alerta para um livro que você já requisitou.';
+            return;
+        }
+
+        // Check if an alert already exists.
+        $alert = BookAvailabilityAlert::where('user_id', $user->id)
+            ->where('book_id', $book->id)
+            ->where('notified', false)
+            ->first();
+
+        if ($alert) {
+            // Remove alert
+            $alert->delete();
+            $this->successMessage = 'Alerta removido com sucesso!';
+        } else {
+            // Create alerta
+            BookAvailabilityAlert::create([
+                'user_id' => $user->id,
+                'book_id' => $book->id,
+                'notified' => false,
+            ]);
+            $this->successMessage = 'Alerta ativado! Você será notificado quando este livro estiver disponível.';
+        }
+    }
+
     public function render()
     {
         $allowedSorts = ['name', 'price', 'publisher_name', 'authors_min_name'];
@@ -152,14 +206,26 @@ class BooksTable extends Component
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
         $canRequestMore = false;
-        
+
         if ($user && Gate::allows('create', Submission::class)) {
             $canRequestMore = $user->activeSubmissions()->count() < 3;
+        }
+
+        // Carregar alertas do usuário para os livros da página atual
+        $userAlerts = collect();
+        if ($user) {
+            $bookIds = $books->pluck('id');
+            $userAlerts = BookAvailabilityAlert::where('user_id', $user->id)
+                ->whereIn('book_id', $bookIds)
+                ->where('notified', false)
+                ->pluck('book_id')
+                ->toArray();
         }
 
         return view('livewire.books-table', [
             'books' => $books,
             'canRequestMore' => $canRequestMore,
+            'userAlerts' => $userAlerts,
         ]);
     }
 }

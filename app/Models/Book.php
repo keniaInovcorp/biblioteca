@@ -63,4 +63,14 @@ class Book extends Model
     {
         return $this->hasMany(Review::class)->where('status', 'active');
     }
+
+    public function availabilityAlerts()
+    {
+        return $this->hasMany(BookAvailabilityAlert::class);
+    }
+
+    public function activeAvailabilityAlerts()
+    {
+        return $this->hasMany(BookAvailabilityAlert::class)->where('notified', false);
+    }
 }

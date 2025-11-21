@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\BookAvailabilityAlert;
 use App\Models\Submission;
+use App\Notifications\BookAvailabilityNotification;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -60,7 +62,7 @@ class SubmissionsTable extends Component
     {
         $user = Auth::user();
         /** @var \App\Models\User $user */
-        
+
         // Only admin can confirm returns
         if (!$user->hasRole('admin')) {
             session()->flash('error', 'Apenas administradores podem confirmar devoluções.');
@@ -84,6 +86,23 @@ class SubmissionsTable extends Component
             'received_at' => now(),
             'days_elapsed' => $daysElapsed,
         ]);
+
+        // Check if the book is available and send notifications.
+        $book = $submission->book;
+        if ($book->isAvailable()) {
+            // Find all active alerts for this book.
+            $alerts = BookAvailabilityAlert::where('book_id', $book->id)
+                ->where('notified', false)
+                ->with('user')
+                ->get();
+
+            // Send a notification to each user.
+            foreach ($alerts as $alert) {
+                $alert->user->notify(new BookAvailabilityNotification($book));
+                // Mark alert as notified.
+                $alert->markAsNotified();
+            }
+        }
 
         session()->flash('success', 'Devolução confirmada com sucesso!');
     }

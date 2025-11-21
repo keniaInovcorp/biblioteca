@@ -88,6 +88,9 @@
                         <th class="w-[12%] text-center">
                             Disponibilidade
                         </th>
+                        <th class="w-[10%] text-center">
+                            Alerta
+                        </th>
                         <th class="w-[18%] text-center">
                             <div class="flex justify-center">Ações</div>
                         </th>
@@ -128,13 +131,59 @@
                                     <span class="badge badge-error">Indisponível</span>
                                 @endif
                             </td>
+                            <td class="align-middle text-center">
+                                @auth
+                                    @if(!$isAvailable)
+                                        @php
+                                            $hasAlert = in_array($book->id, $userAlerts);
+                                            // Check if the user has an active request in this book.
+                                            $userHasActiveSubmission = auth()->user()->submissions()
+                                                ->where('book_id', $book->id)
+                                                ->whereIn('status', ['created', 'overdue'])
+                                                ->exists();
+                                        @endphp
+                                        @if(!$userHasActiveSubmission)
+                                            <a href="#"
+                                                wire:click.prevent="toggleAlert({{ $book->id }})"
+                                                class="btn btn-sm {{ $hasAlert ? 'btn-warning text-warning-content' : 'btn-outline btn-ghost' }}"
+                                                wire:loading.attr="disabled"
+                                                title="{{ $hasAlert ? 'Desativar alerta' : 'Ativar alerta de disponibilidade' }}"
+                                            >
+                                                <span wire:loading.remove class="flex items-center gap-1.5">
+                                                    @if($hasAlert)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                        </svg>
+                                                        <span class="text-xs font-bold whitespace-nowrap">Ativo</span>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                                        </svg>
+                                                        <span class="text-xs whitespace-nowrap">Avisar</span>
+                                                    @endif
+                                                </span>
+                                                <span wire:loading class="flex items-center gap-1">
+                                                    <span class="loading loading-spinner loading-xs"></span>
+                                                    <span class="text-xs">...</span>
+                                                </span>
+                                            </a>
+                                        @else
+                                            <span class="text-xs opacity-50">-</span>
+                                        @endif
+                                    @else
+                                        <span class="text-xs opacity-50">-</span>
+                                    @endif
+                                @else
+                                    <span class="text-xs opacity-50">-</span>
+                                @endauth
+                            </td>
                             <td class="align-middle">
                                 <div class="flex justify-end gap-1 pr-[60px]">
                                     @if($isAvailable && $canRequestMore)
-                                    <a href="#" 
-                                       class="btn btn-square btn-ghost btn-sm" 
-                                       wire:click.prevent="requestBook({{ $book->id }})" 
-                                       aria-label="Requisitar" 
+                                    <a href="#"
+                                       class="btn btn-square btn-ghost btn-sm"
+                                       wire:click.prevent="requestBook({{ $book->id }})"
+                                       aria-label="Requisitar"
                                        title="Requisitar livro">
                                         <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -164,7 +213,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="py-10 text-center text-sm opacity-60">Nenhum livro encontrado.</div>
                             </td>
                         </tr>
