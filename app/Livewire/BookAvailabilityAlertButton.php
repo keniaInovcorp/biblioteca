@@ -24,17 +24,28 @@ class BookAvailabilityAlertButton extends Component
             return $this->redirect(route('login'));
         }
 
-        if ($this->hasAlert) {
-            // Remove alert
-            BookAvailabilityAlert::where('user_id', Auth::id())
-                ->where('book_id', $this->book->id)
-                ->where('notified', false)
-                ->delete();
+        // Check if an alert already exists (regardless of notified status)
+        $alert = BookAvailabilityAlert::where('user_id', Auth::id())
+            ->where('book_id', $this->book->id)
+            ->first();
 
-            $this->hasAlert = false;
-            session()->flash('success', 'Alerta removido com sucesso!');
+        if ($alert) {
+            if ($alert->notified) {
+                // Re-activate a previously notified alert
+                $alert->update([
+                    'notified' => false,
+                    'notified_at' => null,
+                ]);
+                $this->hasAlert = true;
+                session()->flash('success', 'Alerta reativado! Você será notificado quando este livro estiver disponível.');
+            } else {
+                // Remove active alert
+                $alert->delete();
+                $this->hasAlert = false;
+                session()->flash('success', 'Alerta removido com sucesso!');
+            }
         } else {
-            // Create alert
+            // Create new alert
             if (!$this->book->isAvailable()) {
                 BookAvailabilityAlert::create([
                     'user_id' => Auth::id(),

@@ -126,18 +126,26 @@ class BooksTable extends Component
             return;
         }
 
-        // Check if an alert already exists.
+        // Check if an alert already exists (regardless of notified status)
         $alert = BookAvailabilityAlert::where('user_id', $user->id)
             ->where('book_id', $book->id)
-            ->where('notified', false)
             ->first();
 
         if ($alert) {
-            // Remove alert
-            $alert->delete();
-            $this->successMessage = 'Alerta removido com sucesso!';
+            if ($alert->notified) {
+                // Re-activate a previously notified alert
+                $alert->update([
+                    'notified' => false,
+                    'notified_at' => null,
+                ]);
+                $this->successMessage = 'Alerta reativado! Você será notificado quando este livro estiver disponível.';
+            } else {
+                // Remove active alert
+                $alert->delete();
+                $this->successMessage = 'Alerta removido com sucesso!';
+            }
         } else {
-            // Create alerta
+            // Create new alert
             BookAvailabilityAlert::create([
                 'user_id' => $user->id,
                 'book_id' => $book->id,

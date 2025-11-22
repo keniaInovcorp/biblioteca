@@ -28,7 +28,10 @@ class SubmissionCreatedMail extends Mailable
         if ($book?->cover_image_url) {
             $relative = ltrim(preg_replace('#^/?storage/#', '', $book->cover_image_url), '/');
 
-            if ($relative && Storage::disk('public')->exists($relative)) {
+            // Only embed images if you are not using logs.
+            $mailDriver = config('mail.default');
+
+            if ($relative && Storage::disk('public')->exists($relative) && $mailDriver !== 'log') {
                 $absolutePath = Storage::disk('public')->path($relative);
 
                 $this->withSymfonyMessage(function (Email $message) use ($absolutePath) {
@@ -37,6 +40,7 @@ class SubmissionCreatedMail extends Mailable
 
                 $coverCid = 'book-cover';
             } else {
+                // Use the URL when using 'log'.
                 $coverUrl = url($book->cover_image_url);
             }
         }
