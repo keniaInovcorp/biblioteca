@@ -11,6 +11,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 class User extends Authenticatable
 {
@@ -87,6 +89,11 @@ class User extends Authenticatable
 
     public function reviews()
     {
-    return $this->hasMany(Review::class);
+        return $this->hasMany(Review::class);
+    }
+
+    public function cart(): HasOne
+    {
+        return $this->hasOne(Cart::class);
     }
 }
