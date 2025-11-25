@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\GoogleBooksController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\CartController;
 use App\Models\Book;
 use Illuminate\Support\Facades\Mail;
 
@@ -63,4 +64,7 @@ Route::middleware(['auth'])->group(function () {
         ->middleware(['throttle:5,1', 'can:create,' . Book::class])
         ->name('google-books.import-by-query');
 
+    Route::prefix('cart')->name('cart.')->middleware(['auth', 'can:viewAny,App\Models\Cart'])->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('index');
+    });
 });
