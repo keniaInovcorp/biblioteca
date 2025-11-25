@@ -38,8 +38,8 @@
       </div>
     </div>
 
-    <!-- Request History - Admin -->
-    <livewire:book-submissions-table :book="$book" />
+    <!-- Add to Cart -->
+    <livewire:add-to-cart-button :book="$book" />
 
   <!-- Reviews Section -->
   <div class="card bg-base-100 shadow mt-6">
@@ -119,6 +119,9 @@
          </div>
        </div>
       @endif
+
+    <!-- Request History - Admin -->
+    <livewire:book-submissions-table :book="$book" />
 
   </div>
 </x-app-layout>
