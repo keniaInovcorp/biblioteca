@@ -76,6 +76,7 @@ class ReviewForm extends Component
             return false;
         }
 
+        // Only citizens can create reviews, and they must have returned the book
         return $user->can('canReviewBook', $this->book->id);
     }
 
@@ -108,9 +109,9 @@ class ReviewForm extends Component
                 $this->loadUserReview();
                 session()->flash('success', 'Review atualizada com sucesso!');
             } else {
-                // Criar nova review
+                // Create new review - citizens
                 if (! $user->can('canReviewBook', $this->book->id)) {
-                    abort(403, 'Ação não autorizada.');
+                    abort(403, 'Você precisa ter devolvido este livro para criar uma review.');
                 }
 
                 $review = Review::create([

@@ -88,9 +88,11 @@
                         <th class="w-[12%] text-center">
                             Disponibilidade
                         </th>
+                        @if(Auth::user()?->hasRole('citizen'))
                         <th class="w-[10%] text-center">
                             Alerta
                         </th>
+                        @endif
                         <th class="w-[18%] text-center">
                             <div class="flex justify-center">Ações</div>
                         </th>
@@ -131,6 +133,7 @@
                                     <span class="badge badge-error">Indisponível</span>
                                 @endif
                             </td>
+                            @if(Auth::user()?->hasRole('citizen'))
                             <td class="align-middle text-center">
                                 @auth
                                     @if(!$isAvailable)
@@ -177,6 +180,7 @@
                                     <span class="text-xs opacity-50">-</span>
                                 @endauth
                             </td>
+                            @endif
                             <td class="align-middle">
                                 <div class="flex justify-end gap-1 pr-[60px]">
                                     @if($isAvailable && $canRequestMore)
@@ -213,7 +217,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="{{ Auth::user()?->hasRole('citizen') ? '8' : '7' }}">
                                 <div class="py-10 text-center text-sm opacity-60">Nenhum livro encontrado.</div>
                             </td>
                         </tr>

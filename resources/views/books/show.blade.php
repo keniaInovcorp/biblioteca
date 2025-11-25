@@ -70,7 +70,7 @@
             <p class="text-gray-500">Ainda não há avaliações para este livro.</p>
         @endforelse
 
-        <!-- Formulário de Review  -->
+        <!--  Review Form, only citizens can create reviews -->
         @auth
           @can('canReviewBook', $book->id)
                 <div class="mt-6 pt-6 border-t border-base-300">
@@ -81,7 +81,7 @@
     </div>
   </div>
 
-    <!-- Livros Relacionados -->
+    <!-- Related Books -->
     @if($relatedBooks->isNotEmpty())
       <div class="card bg-base-100 shadow mt-6">
         <div class="card-body p-2">

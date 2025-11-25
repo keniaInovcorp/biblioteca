@@ -27,11 +27,11 @@ class ReviewPolicy
 
     /**
      * Determine whether the user can create models.
+     * Only citizens can create reviews.
      */
     public function create(User $user): bool
     {
-        // Só cidadãos criam reviews
-        return !$user->can('create', \App\Models\Book::class);
+        return $user->hasRole('citizen');
     }
 
     /**
@@ -39,7 +39,7 @@ class ReviewPolicy
      */
     public function update(User $user, Review $review): bool
     {
-        // Apenas o user do review pode editar se estiver pendente
+        //Only the reviewer can edit if the review is pending.
         return $user->id === $review->user_id && $review->isPending();
     }
 
@@ -48,7 +48,7 @@ class ReviewPolicy
      */
     public function delete(User $user, Review $review): bool
     {
-        // Só user pode deletar se estiver pendente
+        // Only the user can delete it if it is pending.
         return $user->id === $review->user_id && $review->isPending();
     }
 
@@ -88,9 +88,15 @@ class ReviewPolicy
 
     /**
      * Checks if the user can review a specific book.
+     * Only citizens who have returned the book can create reviews.
      */
     public function canReviewBook(User $user, $bookId): bool
     {
+        // Only citizens can create reviews
+        if (!$user->hasRole('citizen')) {
+            return false;
+        }
+
         // See if you've already done a review.
         if (Review::where('user_id', $user->id)
             ->where('book_id', $bookId)
@@ -98,7 +104,7 @@ class ReviewPolicy
             return false;
         }
 
-        // Check if you have a submitted submission for this book.
+        // Check if you have a returned submission for this book.
         return Submission::where('user_id', $user->id)
             ->where('book_id', $bookId)
             ->where('status', 'returned')

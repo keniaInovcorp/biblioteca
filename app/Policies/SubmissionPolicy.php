@@ -25,10 +25,11 @@ class SubmissionPolicy
 
     /**
      * Determine whether the user can create models.
+     * Only citizens can create requests/submissions.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasRole('citizen');
     }
 
     /**
