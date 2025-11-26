@@ -9,6 +9,7 @@ use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\GoogleBooksController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Models\Book;
 use Illuminate\Support\Facades\Mail;
 
@@ -66,5 +67,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('cart')->name('cart.')->middleware(['auth', 'can:viewAny,App\Models\Cart'])->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
+    });
+
+    Route::prefix('checkout')->name('checkout.')->middleware('auth')->group(function () {
+        Route::get('/', [CheckoutController::class, 'index'])->name('index');
+        Route::post('/', [CheckoutController::class, 'store'])->name('store');
     });
 });

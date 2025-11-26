@@ -69,7 +69,7 @@
                                             <span wire:loading wire:target="updateQuantity" class="loading loading-spinner loading-xs"></span>
                                         </div>
 
-                                        <a href="#" 
+                                        <a href="#"
                                            wire:click.prevent="removeItem({{ $item->book->id }})"
                                            wire:loading.attr="disabled"
                                            class="btn btn-sm btn-error">
@@ -87,7 +87,7 @@
 
                         <div class="divider"></div>
 
-                        <a href="#" 
+                        <a href="#"
                            wire:click.prevent="clearCart"
                            wire:confirm="Tem certeza que deseja limpar o carrinho?"
                            wire:loading.attr="disabled"
@@ -121,9 +121,9 @@
                             </div>
                         </div>
 
-                        {{-- <a href="{{ route('checkout.index') }}" class="btn btn-primary w-full">
+                        <a href="{{ route('checkout.index') }}" class="btn btn-primary w-full">
                             Finalizar Compra
-                        </a> --}}
+                        </a>
 
                         <div class="alert alert-info shadow-lg mb-4">
                             <svg class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
