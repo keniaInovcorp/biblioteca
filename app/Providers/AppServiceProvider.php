@@ -15,11 +15,13 @@ use App\Models\User;
 use App\Models\Submission;
 use App\Models\Review;
 use App\Models\Cart;
+use App\Models\Order;
 use App\Observers\SubmissionObserver;
 use App\Policies\AdminPolicy;
 use App\Policies\SubmissionPolicy;
 use App\Policies\ReviewPolicy;
 use App\Policies\CartPolicy;
+use App\Policies\OrderPolicy;
 use Illuminate\Console\Scheduling\Schedule;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Submission::class, SubmissionPolicy::class);
         Gate::policy(Review::class, ReviewPolicy::class);
         Gate::policy(Cart::class, CartPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
 
         Gate::define('canReviewBook', function (User $user, $bookId) {
             $policy = new ReviewPolicy();

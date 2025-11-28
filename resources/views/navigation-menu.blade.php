@@ -34,6 +34,10 @@
                         {{ __('Requisições') }}
                     </x-nav-link>
 
+                    <x-nav-link href="{{ route('orders.index') }}" :active="request()->routeIs('orders.*')">
+                        {{ __('Encomendas') }}
+                    </x-nav-link>
+
                     @can('create', App\Models\Book::class)
                     <x-nav-link :href="route('reviews.index')" :active="request()->routeIs('reviews.*')">
                         {{ __('Reviews') }}
@@ -230,6 +234,10 @@
 
             <x-responsive-nav-link href="{{ route('submissions.index') }}" :active="request()->routeIs('submissions.*')">
                 {{ __('Requisições') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('orders.index') }}" :active="request()->routeIs('orders.*')">
+                {{ __('Encomendas') }}
             </x-responsive-nav-link>
 
             @can('create', App\Models\Book::class)

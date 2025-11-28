@@ -10,12 +10,18 @@ use App\Http\Controllers\GoogleBooksController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Models\Book;
 use Illuminate\Support\Facades\Mail;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Webhook - sem CSRF
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])
+    ->name('stripe.webhook');
 
 Route::middleware([
     'auth:sanctum',
@@ -74,5 +80,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [CheckoutController::class, 'store'])->name('store');
         Route::get('/payment', [CheckoutController::class, 'payment'])->name('payment');
         Route::get('/success/{order}', [CheckoutController::class, 'success'])->name('success');
+    });
+
+    // Orders
+    Route::prefix('orders')->name('orders.')->middleware('auth')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        Route::post('/{order}/mark-as-shipped', [OrderController::class, 'markAsShipped'])->name('mark-as-shipped');
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
     });
 });

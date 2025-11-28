@@ -46,8 +46,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">
                 <div class="card bg-base-100 shadow-xl">
-                    <div class="card-body">
-                        <h2 class="card-title mb-4">Informações de Pagamento</h2>
+                    <div class="card-body p-6">
+                        <h2 class="card-title text-xl mb-6">Informações de Pagamento</h2>
 
                         <livewire:stripe-payment 
                             :order="$order" 

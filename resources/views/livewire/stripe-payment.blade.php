@@ -1,7 +1,11 @@
-<div>
+<div class="space-y-4">
     <div x-data="stripePayment(@js($stripeKey), @js($clientSecret))" x-init="init()">
-        {{-- Card Element --}}
-        <div x-ref="cardElement" class="p-4 border border-base-300 rounded-lg mb-4 bg-base-100 min-h-[50px]"></div>
+        <div class="form-control w-full mb-6">
+            <label class="label">
+                <span class="label-text font-semibold">Dados do Cartão</span>
+            </label>
+            <div x-ref="cardElement" class="p-4 border border-base-300 rounded-lg bg-base-100 min-h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all"></div>
+        </div>
 
         {{-- Error Message --}}
         @if($errorMessage)
@@ -14,21 +18,22 @@
         @endif
 
         {{-- Pay Button --}}
-        <a
-            href="#"
-            @click.prevent="submitPayment()"
-            class="btn btn-primary w-full"
-            :class="{ 'btn-disabled pointer-events-none': processing || $wire.processing }"
-        >
-            <span x-show="!processing && !$wire.processing" x-cloak>
-                Pagar {{ number_format($order->total, 2, ',', '.') }} €
-            </span>
-            <span x-show="processing || $wire.processing" class="flex items-center gap-2">
-                <span class="loading loading-spinner loading-sm"></span>
-                A processar...
-            </span>
-        </a>
-
+        <div class="form-control w-full">
+            <a
+                href="#"
+                @click.prevent="submitPayment()"
+                class="btn btn-primary w-full btn-lg"
+                :class="{ 'btn-disabled pointer-events-none': processing || $wire.processing }"
+            >
+                <span x-show="!processing && !$wire.processing" x-cloak>
+                    Pagar {{ number_format($order->total, 2, ',', '.') }} €
+                </span>
+                <span x-show="processing || $wire.processing" class="flex items-center gap-2">
+                    <span class="loading loading-spinner loading-sm"></span>
+                    A processar...
+                </span>
+            </a>
+        </div>
     </div>
 </div>
 
@@ -43,10 +48,8 @@
         cardElement: null,
         processing: false,
 
-        // Get computed CSS color from DaisyUI
         getThemeColor(cssVar) {
             const value = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
-            // DaisyUI uses oklch colors, convert to hex for Stripe
             if (value.includes('oklch')) {
                 return null;
             }
