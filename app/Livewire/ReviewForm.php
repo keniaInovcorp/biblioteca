@@ -13,21 +13,21 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ReviewForm extends Component
 {
-     use AuthorizesRequests;
+    use AuthorizesRequests;
+    
     public Book $book;
-    public ?Review $review = null;
+    public ?int $reviewId = null;
     public string $comment = '';
     public int $rating = 5;
     public bool $isEditing = false;
 
     protected $rules = [
-        'comment' => 'required|string|min:10|max:1000',
+        'comment' => 'required|string|max:1000',
         'rating' => 'required|integer|min:1|max:5',
     ];
 
     protected $messages = [
         'comment.required' => 'O comentário é obrigatório.',
-        'comment.min' => 'O comentário deve ter pelo menos 10 caracteres.',
         'comment.max' => 'O comentário não pode ter mais de 1000 caracteres.',
         'rating.required' => 'A avaliação é obrigatória.',
         'rating.min' => 'A avaliação deve ser no mínimo 1.',
@@ -40,11 +40,6 @@ class ReviewForm extends Component
         $this->loadUserReview();
     }
 
-    /**
-     * Get the authenticated user or null.
-     *
-     * @return \App\Models\User|null
-     */
     protected function getUser(): ?\App\Models\User
     {
         /** @var \App\Models\User|null $user */
@@ -57,15 +52,26 @@ class ReviewForm extends Component
         $user = $this->getUser();
 
         if ($user) {
-            $this->review = Review::where('user_id', $user->id)
+            $review = Review::where('user_id', $user->id)
                 ->where('book_id', $this->book->id)
                 ->first();
 
-            if ($this->review) {
-                $this->comment = $this->review->comment;
-                $this->rating = $this->review->rating;
+            if ($review) {
+                $this->reviewId = $review->id;
+                $this->comment = $review->comment;
+                $this->rating = $review->rating;
+            } else {
+                $this->reviewId = null;
             }
         }
+    }
+    
+    /**
+     * Get the review model from ID.
+     */
+    protected function getReview(): ?Review
+    {
+        return $this->reviewId ? Review::find($this->reviewId) : null;
     }
 
     public function canReview(): bool
@@ -76,7 +82,6 @@ class ReviewForm extends Component
             return false;
         }
 
-        // Only citizens can create reviews, and they must have returned the book
         return $user->can('canReviewBook', $this->book->id);
     }
 
@@ -93,13 +98,14 @@ class ReviewForm extends Component
         DB::beginTransaction();
 
         try {
-            if ($this->review && $this->isEditing) {
-                // Atualizar review existente
-                if (! $user->can('update', $this->review)) {
+            $review = $this->getReview();
+            
+            if ($review && $this->isEditing) {
+                if (! $user->can('update', $review)) {
                     abort(403, 'Ação não autorizada.');
                 }
 
-                $this->review->update([
+                $review->update([
                     'comment' => $this->comment,
                     'rating'  => $this->rating,
                 ]);
@@ -109,7 +115,6 @@ class ReviewForm extends Component
                 $this->loadUserReview();
                 session()->flash('success', 'Review atualizada com sucesso!');
             } else {
-                // Create new review - citizens
                 if (! $user->can('canReviewBook', $this->book->id)) {
                     abort(403, 'Você precisa ter devolvido este livro para criar uma review.');
                 }
@@ -127,7 +132,7 @@ class ReviewForm extends Component
 
                 DB::commit();
                 $this->loadUserReview();
-                session()->flash('success', 'Review enviado com sucesso! Aguarde aprovação do administrador.');
+                session()->flash('success', 'Review enviada com sucesso! Aguarde aprovação do administrador.');
             }
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -138,36 +143,45 @@ class ReviewForm extends Component
 
     public function edit()
     {
-        if ($this->review && $this->review->isPending()) {
+        $review = $this->getReview();
+        
+        if ($review && $review->isPending()) {
             $this->isEditing = true;
+            $this->comment = $review->comment;
+            $this->rating = $review->rating;
         }
     }
 
     public function cancelEdit()
     {
         $this->isEditing = false;
-        $this->loadUserReview();
+        $review = $this->getReview();
+        if ($review) {
+            $this->comment = $review->comment;
+            $this->rating = $review->rating;
+        }
     }
 
     public function delete()
     {
         $user = $this->getUser();
+        $review = $this->getReview();
 
-        if (! $user || ! $this->review) {
+        if (! $user || ! $review) {
             abort(403, 'Ação não autorizada.');
         }
 
-        if (! $user->can('delete', $this->review)) {
+        if (! $user->can('delete', $review)) {
             abort(403, 'Ação não autorizada.');
         }
 
         DB::beginTransaction();
 
         try {
-            $this->review->delete();
+            $review->delete();
             DB::commit();
 
-            $this->review = null;
+            $this->reviewId = null;
             $this->comment = '';
             $this->rating = 5;
             $this->isEditing = false;
@@ -191,6 +205,10 @@ class ReviewForm extends Component
 
     public function render()
     {
-        return view('livewire.review-form');
+        $review = $this->getReview();
+        
+        return view('livewire.review-form', [
+            'review' => $review,
+        ]);
     }
 }

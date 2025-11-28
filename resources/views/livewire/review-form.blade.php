@@ -1,7 +1,9 @@
 <div class="card bg-base-100 shadow">
     <div class="card-body">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="card-title">Deixe sua Avaliação</h2>
+            <h2 class="card-title">
+                {{ $isEditing ? 'Editar Avaliação' : 'Deixe sua Avaliação' }}
+            </h2>
 
             @if($review && $review->isPending() && !$isEditing)
                 <div class="flex gap-2">
@@ -31,7 +33,7 @@
         </div>
 
         @if(session()->has('success'))
-            <div class="alert alert-success mb-4" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition>
+            <div class="alert alert-success mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -40,7 +42,7 @@
         @endif
 
         @if(session()->has('error'))
-            <div class="alert alert-error mb-4" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" x-transition>
+            <div class="alert alert-error mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -49,7 +51,7 @@
         @endif
 
         @if($review && $review->isRejected())
-            <!-- Review Rejected -->
+            {{-- Review Rejected --}}
             <div class="alert alert-warning mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -81,7 +83,7 @@
                 </div>
             </div>
         @elseif($review && $review->isPending() && !$isEditing)
-            <!-- Review Pending -->
+            {{-- Review Pending --}}
             <div class="space-y-4">
                 <div>
                     <p class="text-sm font-semibold mb-2">Sua avaliação:</p>
@@ -102,9 +104,8 @@
                 </div>
             </div>
         @else
-            <!-- Review Form - Create or Edit-->
+            {{-- Review Form - Create or Edit --}}
             <form wire:submit.prevent="submit">
-                <!-- Rating -->
                 <div class="form-control mb-6">
                     <label class="label">
                         <span class="label-text font-medium">Avaliação (1 a 5 estrelas)</span>
@@ -123,7 +124,7 @@
                     @error('rating') <span class="text-error text-sm">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Comment -->
+                {{-- Comment --}}
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text font-medium">Comentário</span>
@@ -140,7 +141,6 @@
                     </label>
                 </div>
 
-                <!-- Submit Button -->
                 <div class="card-actions justify-end mt-4">
                     @if($isEditing)
                         <button
@@ -151,15 +151,15 @@
                             Cancelar
                         </button>
                     @endif
-                    <a href="#" class="btn btn-primary" wire:click.prevent="submit" wire:loading.attr="disabled">
-                        <span wire:loading.remove>
+                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="submit">
                             {{ $isEditing ? 'Atualizar Avaliação' : 'Enviar Avaliação' }}
                         </span>
-                        <span wire:loading>
+                        <span wire:loading wire:target="submit">
                             <span class="loading loading-spinner loading-sm"></span>
                             {{ $isEditing ? 'Atualizando...' : 'Enviando...' }}
                         </span>
-                    </a>
+                    </button>
                 </div>
             </form>
         @endif

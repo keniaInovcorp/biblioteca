@@ -3,62 +3,82 @@
 namespace App\Livewire;
 
 use App\Models\Book;
+use App\Models\Cart;
 use App\Services\CartService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 /**
  * Livewire component for adding books to the shopping cart.
- * 
+ *
  * This component is displayed on the book detail page and allows
  * citizens to add books to their cart with a specified quantity.
  */
 class AddToCartButton extends Component
 {
+    use AuthorizesRequests;
+
     /**
      * The book to be added to the cart.
-     *
-     * @var Book
+     * Locked to prevent tampering from the frontend.
      */
+    #[Locked]
     public Book $book;
 
     /**
-     * The quantity of books to add to the cart.
-     *
-     * @var int
+     * Whether to render inline without card wrapper.
+     * Locked to prevent tampering from the frontend.
      */
+    #[Locked]
+    public bool $inline = false;
+
+    /**
+     * The quantity of books to add to the cart.
+     */
+    #[Validate('required|integer|min:1|max:10')]
     public int $quantity = 1;
 
     /**
      * Success message to display after adding to cart.
-     *
-     * @var string
      */
     public string $successMessage = '';
+
+    /**
+     * Error message to display on failure.
+     */
+    public string $errorMessage = '';
 
     /**
      * Initialize the component with the book.
      *
      * @param Book $book The book to be added to the cart
-     * @return void
+     * @param bool $inline Whether to render inline without card wrapper
      */
-    public function mount(Book $book): void
+    public function mount(Book $book, bool $inline = false): void
     {
         $this->book = $book;
+        $this->inline = $inline;
     }
 
     /**
      * Add the book to the user's cart.
-     * 
-     * Only authenticated citizens can add items to the cart.
-     * The quantity must be between 1 and 10.
+     *
+     * Uses policy authorization and validation.
      * Dispatches 'cart-updated' event on success.
      *
-     * @return void
+     * @param CartService $cartService Injected cart service
      */
-    public function addToCart(): void
+    public function addToCart(CartService $cartService): void
     {
+        // Clear previous messages
+        $this->successMessage = '';
+        $this->errorMessage = '';
+
+        // Check authentication
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
@@ -67,28 +87,50 @@ class AddToCartButton extends Component
             return;
         }
 
-        // Only citizens can add items to cart
-        if (!$user->hasRole('citizen')) {
+        // Authorize using Cart policy
+        $this->authorize('addItem', Cart::class);
+
+        // Validate quantity
+        $this->validate();
+
+        // Check book has price
+        if (!$this->book->price) {
+            $this->errorMessage = 'Este livro não está disponível para compra.';
             return;
         }
 
-        if ($this->quantity < 1 || $this->quantity > 10) {
-            return;
+        try {
+            $cartService->addItem($user, $this->book, $this->quantity);
+
+            $this->successMessage = 'Livro adicionado ao carrinho!';
+            $this->dispatch('cart-updated');
+
+            // Reset quantity after successful add
+            $this->quantity = 1;
+        } catch (\Exception $e) {
+            $this->errorMessage = 'Erro ao adicionar ao carrinho. Tente novamente.';
         }
+    }
 
-        app(CartService::class)->addItem($user, $this->book, $this->quantity);
+    /**
+     * Check if the current user can add items to cart.
+     */
+    public function canAddToCart(): bool
+    {
+        $user = Auth::user();
 
-        $this->successMessage = 'Livro adicionado ao carrinho!';
-        $this->dispatch('cart-updated');
+        return $user
+            && $user->can('addItem', Cart::class)
+            && $this->book->price;
     }
 
     /**
      * Render the component view.
-     *
-     * @return View
      */
     public function render(): View
     {
-        return view('livewire.add-to-cart-button');
+        return view('livewire.add-to-cart-button', [
+            'canAdd' => $this->canAddToCart(),
+        ]);
     }
 }

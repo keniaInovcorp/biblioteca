@@ -89,6 +89,8 @@ class ReviewPolicy
     /**
      * Checks if the user can review a specific book.
      * Only citizens who have returned the book can create reviews.
+     * User can create new review ONLY if:
+     * - Never reviewed before (no review exists)
      */
     public function canReviewBook(User $user, $bookId): bool
     {
@@ -97,17 +99,45 @@ class ReviewPolicy
             return false;
         }
 
-        // See if you've already done a review.
-        if (Review::where('user_id', $user->id)
-            ->where('book_id', $bookId)
-            ->exists()) {
-            return false;
-        }
-
         // Check if you have a returned submission for this book.
-        return Submission::where('user_id', $user->id)
+        $hasReturnedBook = Submission::where('user_id', $user->id)
             ->where('book_id', $bookId)
             ->where('status', 'returned')
             ->exists();
+
+        if (!$hasReturnedBook) {
+            return false;
+        }
+
+        // Check if user already has a review for this book
+        $existingReview = Review::where('user_id', $user->id)
+            ->where('book_id', $bookId)
+            ->exists();
+
+        // Can only create if no review exists
+        return !$existingReview;
+    }
+
+    /**
+     * Check if user has a pending review for a book.
+     */
+    public function hasPendingReview(User $user, $bookId): bool
+    {
+        return Review::where('user_id', $user->id)
+            ->where('book_id', $bookId)
+            ->where('status', 'pending')
+            ->exists();
+    }
+
+    /**
+     * Get user's current review for a book (pending or rejected, not approved).
+     */
+    public function getCurrentReview(User $user, $bookId): ?Review
+    {
+        return Review::where('user_id', $user->id)
+            ->where('book_id', $bookId)
+            ->whereIn('status', ['pending', 'rejected'])
+            ->latest()
+            ->first();
     }
 }
