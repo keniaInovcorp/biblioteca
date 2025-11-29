@@ -1,10 +1,15 @@
+
 <div class="space-y-4">
     <div x-data="stripePayment(@js($stripeKey), @js($clientSecret))" x-init="init()">
         <div class="form-control w-full mb-6">
             <label class="label">
                 <span class="label-text font-semibold">Dados do Cartão</span>
             </label>
-            <div x-ref="cardElement" class="p-4 border border-base-300 rounded-lg bg-base-100 min-h-[50px] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all"></div>
+            <div wire:ignore>
+                <div class="p-3 border border-base-300 rounded-lg bg-base-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all shadow-sm">
+                    <div x-ref="cardElement" class="w-full"></div>
+                </div>
+            </div>
         </div>
 
         {{-- Error Message --}}
@@ -48,29 +53,54 @@
         cardElement: null,
         processing: false,
 
-        getThemeColor(cssVar) {
-            const value = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
-            if (value.includes('oklch')) {
-                return null;
+        init() {
+            // Wait for stripe to load
+            if (typeof Stripe === 'undefined') {
+                const interval = setInterval(() => {
+                    if (typeof Stripe !== 'undefined') {
+                        clearInterval(interval);
+                        this.initializeStripe(stripeKey);
+                    }
+                }, 50);
+            } else {
+                this.initializeStripe(stripeKey);
             }
-            return value || null;
         },
 
-        init() {
+        initializeStripe(stripeKey) {
+            // Prevent double initialization
+            if (this.stripe) return;
+
             this.stripe = Stripe(stripeKey);
             const elements = this.stripe.elements();
+
+            const computedStyle = getComputedStyle(document.body);
+            const primaryColor = computedStyle.getPropertyValue('--p') || '#4f46e5';
+            const baseContent = computedStyle.getPropertyValue('--bc') || '#1f2937';
 
             this.cardElement = elements.create('card', {
                 style: {
                     base: {
                         fontSize: '16px',
-                        fontFamily: 'inherit',
+                        color: '#374151',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
                         fontSmoothing: 'antialiased',
+                        '::placeholder': {
+                            color: '#9ca3af',
+                        },
+                        iconColor: '#374151',
+                    },
+                    invalid: {
+                        color: '#ef4444',
+                        iconColor: '#ef4444',
                     },
                 },
+                hidePostalCode: true,
             });
 
-            this.cardElement.mount(this.$refs.cardElement);
+            if (this.$refs.cardElement) {
+                this.cardElement.mount(this.$refs.cardElement);
+            }
         },
 
         async submitPayment() {

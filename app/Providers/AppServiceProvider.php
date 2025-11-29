@@ -71,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         // Schedule send return reminders daily at 12:38
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('reminders:due-returns')->dailyAt('12:38');
+            $schedule->command('cart:send-abandonment-notifications')->hourly();
         });
     }
 }
