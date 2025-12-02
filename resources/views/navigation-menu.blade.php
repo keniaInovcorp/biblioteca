@@ -48,6 +48,10 @@
                     <x-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
                         {{ __('Administradores') }}
                     </x-nav-link>
+
+                    <x-nav-link href="{{ route('logs.index') }}" :active="request()->routeIs('logs.*')">
+                        {{ __('Logs') }}
+                    </x-nav-link>
                     @endcan
                 </div>
 
@@ -196,6 +200,10 @@
             @can('viewAny', App\Models\User::class)
             <x-responsive-nav-link href="{{ route('admins.index') }}" :active="request()->routeIs('admins.*')">
                 {{ __('Administradores') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link href="{{ route('logs.index') }}" :active="request()->routeIs('logs.*')">
+                {{ __('Logs') }}
             </x-responsive-nav-link>
             @endcan
 

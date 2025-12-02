@@ -93,4 +93,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{order}/mark-as-shipped', [OrderController::class, 'markAsShipped'])->name('mark-as-shipped');
         Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
     });
+
+    // Logs
+    Route::get('/logs', \App\Livewire\Admin\ShowLogs::class)->name('logs.index');
 });
