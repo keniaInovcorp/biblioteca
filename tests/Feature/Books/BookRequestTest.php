@@ -39,3 +39,21 @@ test('user can create a book request', function () {
     expect($submission->expected_return_date->format('Y-m-d'))
         ->toBe(now()->addDays(5)->format('Y-m-d'));
 });
+
+test('cannot create a request without a valid book', function () {
+    /** @var \Tests\TestCase $this */
+
+    Role::create(['name' => 'citizen', 'guard_name' => 'web']);
+    $user = User::factory()->create();
+    $user->assignRole('citizen');
+
+    // Try to create with not valid book_id
+    /** @var \App\Models\User $user */
+    $response = $this->actingAs($user)
+        ->post(route('submissions.store'), [
+            'book_id' => 99999 // ID que não existe
+        ]);
+
+    // Assert: Check validation error in session
+    $response->assertSessionHasErrors(['book_id']);
+});
