@@ -138,3 +138,37 @@ test('user can only see their own requests', function () {
         ->assertSee('REQ-MY-BOOK')     // Must see their own
         ->assertDontSee('REQ-OTHER-BOOK'); // Must NOT see others user
 });
+
+test('cannot request a book that is not available', function () {
+    /** @var \Tests\TestCase $this */
+
+    Role::create(['name' => 'citizen', 'guard_name' => 'web']);
+    Role::create(['name' => 'admin', 'guard_name' => 'web']);
+
+    /** @var \App\Models\User $user1 */
+    $user1 = User::factory()->create();
+    $user1->assignRole('citizen');
+
+    /** @var \App\Models\User $user2 */
+    $user2 = User::factory()->create();
+    $user2->assignRole('citizen');
+
+    $publisher = Publisher::factory()->create();
+    $book = Book::factory()->create(['publisher_id' => $publisher->id]);
+
+    // User 1 requests the book first
+    Submission::factory()->create([
+        'user_id' => $user1->id,
+        'book_id' => $book->id,
+        'status' => 'created'
+    ]);
+
+    // User 2 tries to request the same book
+    $response = $this->actingAs($user2)
+        ->post(route('submissions.store'), [
+            'book_id' => $book->id
+        ]);
+
+    // Should fail validation
+    $response->assertSessionHasErrors(['book_id' => 'Este livro não está disponível para requisição.']);
+});
