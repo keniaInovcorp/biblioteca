@@ -6,6 +6,8 @@ use App\Models\Publisher;
 use App\Models\Submission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Livewire\Livewire;
+use App\Livewire\SubmissionsTable;
 
 uses(RefreshDatabase::class);
 
@@ -97,4 +99,42 @@ test('admin can confirm a book return', function () {
 
     $updatedSubmission = $submission->fresh();
     expect($updatedSubmission->received_at)->not->toBeNull();
+});
+
+test('user can only see their own requests', function () {
+    /** @var \Tests\TestCase $this */
+
+    Role::create(['name' => 'citizen', 'guard_name' => 'web']);
+    Role::create(['name' => 'admin', 'guard_name' => 'web']);
+
+    /** @var \App\Models\User $userA */
+    $userA = User::factory()->create();
+    $userA->assignRole('citizen');
+
+    // $userB
+    $userB = User::factory()->create();
+    $userB->assignRole('citizen');
+
+    $publisher = Publisher::factory()->create();
+    $book = Book::factory()->create(['publisher_id' => $publisher->id]);
+
+    // Create submission for User A
+    $submissionA = Submission::factory()->create([
+        'user_id' => $userA->id,
+        'book_id' => $book->id,
+        'request_number' => 'REQ-MY-BOOK',
+    ]);
+
+    // Create submission for User B - Should not see
+    $submissionB = Submission::factory()->create([
+        'user_id' => $userB->id,
+        'book_id' => $book->id,
+        'request_number' => 'REQ-OTHER-BOOK',
+    ]);
+
+    // Act
+    Livewire::actingAs($userA)
+        ->test(SubmissionsTable::class)
+        ->assertSee('REQ-MY-BOOK')     // Must see their own
+        ->assertDontSee('REQ-OTHER-BOOK'); // Must NOT see others user
 });
