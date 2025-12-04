@@ -15,8 +15,8 @@ test('user can create a book request', function () {
     Role::create(['name' => 'citizen', 'guard_name' => 'web']);
     Role::create(['name' => 'admin', 'guard_name' => 'web']);
 
+    /** @var \App\Models\User $user */
     $user = User::factory()->create();
-     /** @var \App\Models\User $user */
     $user->assignRole('citizen');
 
     $publisher = Publisher::factory()->create();
@@ -44,16 +44,57 @@ test('cannot create a request without a valid book', function () {
     /** @var \Tests\TestCase $this */
 
     Role::create(['name' => 'citizen', 'guard_name' => 'web']);
+
+    /** @var \App\Models\User $user */
     $user = User::factory()->create();
     $user->assignRole('citizen');
 
     // Try to create with not valid book_id
-    /** @var \App\Models\User $user */
     $response = $this->actingAs($user)
         ->post(route('submissions.store'), [
-            'book_id' => 99999 // ID que não existe
+            'book_id' => 99999 // ID that does not exist
         ]);
 
     // Assert: Check validation error in session
     $response->assertSessionHasErrors(['book_id']);
+});
+
+test('admin can confirm a book return', function () {
+    /** @var \Tests\TestCase $this */
+
+    Role::create(['name' => 'citizen', 'guard_name' => 'web']);
+    Role::create(['name' => 'admin', 'guard_name' => 'web']);
+
+    /** @var \App\Models\User $user */
+    $user = User::factory()->create();
+    $user->assignRole('citizen');
+
+    /** @var \App\Models\User $admin */
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $publisher = Publisher::factory()->create();
+    $book = Book::factory()->create(['publisher_id' => $publisher->id]);
+
+    // Create submissions using the Factory.
+    $submission = Submission::factory()->create([
+        'user_id' => $user->id,
+        'book_id' => $book->id,
+        'request_date' => now()->subDays(2),
+        'expected_return_date' => now()->addDays(3),
+    ]);
+
+    // Admin confirms the return.
+    $response = $this->actingAs($admin)
+        ->post(route('submissions.confirm-return', $submission));
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('submissions', [
+        'id' => $submission->id,
+        'status' => 'returned',
+    ]);
+
+    $updatedSubmission = $submission->fresh();
+    expect($updatedSubmission->received_at)->not->toBeNull();
 });
