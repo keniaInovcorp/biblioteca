@@ -3,12 +3,54 @@
         <table class="table table-zebra w-full">
             <thead>
                 <tr>
-                    <th>Data/Hora</th>
-                    <th>User</th>
-                    <th>Módulo</th>
-                    <th>ID Objeto</th>
-                    <th>Ação</th>
-                    <th>IP</th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('created_at')">
+                            Data/Hora
+                            @if($sortField === 'created_at')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('user_name')">
+                            User
+                            @if($sortField === 'user_name')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('module')">
+                            Módulo
+                            @if($sortField === 'module')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('subject_id')">
+                            ID Objeto
+                            @if($sortField === 'subject_id')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('action')">
+                            Ação
+                            @if($sortField === 'action')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
+                    <th>
+                        <button class="link link-hover font-semibold cursor-pointer" wire:click="sortBy('ip_address')">
+                            IP
+                            @if($sortField === 'ip_address')
+                                <span class="ml-1">{{ $sortDir === 'asc' ? '▲' : '▼' }}</span>
+                            @endif
+                        </button>
+                    </th>
                     <th>Browser</th>
                 </tr>
             </thead>
